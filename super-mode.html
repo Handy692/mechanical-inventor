@@ -666,41 +666,65 @@
             cardElement.dataset.type = card.type;
             cardElement.style.animationDelay = `${0.8 + index * 0.1}s`;
             
-            // 随机位置（避免初始重叠）
-            let randomX = 0;
-            let randomY = 0;
-            let maxAttempts = 50;
-            let validPosition = false;
+            // 检查是否是移动设备
+            const isMobile = window.innerWidth <= 768;
             
-            while (!validPosition && maxAttempts > 0) {
-                const maxX = containerRect.width - 200;
-                const maxY = containerRect.height - 220;
+            let posX = 0;
+            let posY = 0;
+            
+            if (isMobile) {
+                // 移动端：使用网格布局，避免重叠
+                const cols = 2;
+                const cardWidth = 160;
+                const cardHeight = 180;
+                const spacingX = 10;
+                const spacingY = 15;
                 
-                randomX = Math.random() * maxX;
-                randomY = Math.random() * maxY;
+                const row = Math.floor(index / cols);
+                const col = index % cols;
                 
-                // 检查是否与其他卡片重叠
-                validPosition = true;
+                // 计算居中的起始位置
+                const totalWidth = cols * cardWidth + (cols - 1) * spacingX;
+                const startX = (containerRect.width - totalWidth) / 2;
+                const startY = 20;
                 
-                for (const [existingCard, position] of originalPositions.entries()) {
-                    const dx = Math.abs(randomX - position.left);
-                    const dy = Math.abs(randomY - position.top);
+                posX = startX + col * (cardWidth + spacingX);
+                posY = startY + row * (cardHeight + spacingY);
+            } else {
+                // 桌面端：随机位置（避免初始重叠）
+                let maxAttempts = 50;
+                let validPosition = false;
+                
+                while (!validPosition && maxAttempts > 0) {
+                    const maxX = containerRect.width - 200;
+                    const maxY = containerRect.height - 220;
                     
-                    // 确保卡片之间有足够的间距（至少卡片宽度的一半）
-                    if (dx < 150 && dy < 150) {
-                        validPosition = false;
-                        break;
+                    posX = Math.random() * maxX;
+                    posY = Math.random() * maxY;
+                    
+                    // 检查是否与其他卡片重叠
+                    validPosition = true;
+                    
+                    for (const [existingCard, position] of originalPositions.entries()) {
+                        const dx = Math.abs(posX - position.left);
+                        const dy = Math.abs(posY - position.top);
+                        
+                        // 确保卡片之间有足够的间距
+                        if (dx < 180 && dy < 180) {
+                            validPosition = false;
+                            break;
+                        }
                     }
+                    
+                    maxAttempts--;
                 }
-                
-                maxAttempts--;
             }
             
-            cardElement.style.left = `${randomX}px`;
-            cardElement.style.top = `${randomY}px`;
+            cardElement.style.left = `${posX}px`;
+            cardElement.style.top = `${posY}px`;
             
             // 保存原始位置
-            originalPositions.set(cardElement, { left: randomX, top: randomY });
+            originalPositions.set(cardElement, { left: posX, top: posY });
             
             if (card.type === 'description') {
                 cardElement.innerHTML = `
@@ -963,8 +987,8 @@
             const overlapArea = overlapX * overlapY;
             const cardArea = rect1.width * rect1.height;
             
-            // 只有当重叠面积超过卡片面积的40%时才认为是匹配（降低灵敏度）
-            return overlapArea > cardArea * 0.4;
+            // 只有当重叠面积超过卡片面积的70%时才认为是匹配（大幅降低灵敏度）
+            return overlapArea > cardArea * 0.7;
         }
 
         // 显示成功弹窗
