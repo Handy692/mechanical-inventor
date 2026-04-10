@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>主要内容</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 
+                0 0 15px rgba(100, 181, 246, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .content-card-link {
+            text-decoration: none;
+            display: block;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            position: relative;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .content-card:nth-child(1) {
+            animation-delay: 0.8s;
+        }
+
+        .content-card:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        .content-card:nth-child(3) {
+            animation-delay: 1.2s;
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation-delay: 0.2s;
+        }
+
+        .icon-container img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+            animation-delay: 0.4s;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 15px;
+            animation-delay: 0.6s;
+        }
+
+        .card-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            animation-delay: 0.8s;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.4s;
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 20;
+            animation-delay: 1.6s;
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-1 {
+            top: 5%;
+            left: 2%;
+            animation: fadeInDownRotate1 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        .card-2 {
+            top: 10%;
+            right: 2%;
+            animation: fadeInDownRotate2 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .card-3 {
+            bottom: 5%;
+            right: 2%;
+            animation: fadeInDownRotate3 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes fadeInDownRotate1 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-15deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate2 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(20deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate3 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-10deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .content-card {
+                padding: 25px;
+            }
+
+            .icon-container {
+                width: 60px;
+                height: 60px;
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">学习小挑战，你想选择谁</h1>
+        
+        <div class="content-grid">
+            <a href="archives.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/书籍1_book-one.svg" alt="书籍">
+                    </div>
+                    <h2 class="card-title">零件档案馆</h2>
+                    <p class="card-description">探索各种机械零件的详细信息，了解它们的功能和用途</p>
+                </div>
+            </a>
+
+            <a href="match-names.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/书签_bookmark-one.svg" alt="书签">
+                    </div>
+                    <h2 class="card-title">帮零件找名字</h2>
+                    <p class="card-description">通过互动游戏学习识别不同的机械零件，提升认知能力</p>
+                </div>
+            </a>
+
+            <a href="parts-test.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/编辑文件_file-editing.svg" alt="编辑文件">
+                    </div>
+                    <h2 class="card-title">零件小考验</h2>
+                    <p class="card-description">测试你的机械知识，完成有趣的挑战任务</p>
+                </div>
+            </a>
+        </div>
+
+        <!-- 每日一题卡片 -->
+        <div class="daily-question-card-container" style="margin-top: 40px; opacity: 0; transform: translateY(-20px); animation: fadeInDown 1s ease-out forwards; animation-delay: 0.8s;">
+            <div class="daily-question-card" onclick="this.classList.toggle('flipped')">
+                <!-- 卡片正面 -->
+                <div class="card-front">
+                    <div class="date-update" id="front-date"></div>
+                    <h2 class="daily-question-title">每日一题</h2>
+                    <p class="daily-question-difficulty">魔鬼难度地狱题，你敢来挑战吗？</p>
+                </div>
+                <!-- 卡片背面 -->
+                <div class="card-back">
+                    <div class="date-update" id="back-date"></div>
+                    <div class="question-content" id="question-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .daily-question-card-container {
+                display: flex;
+                justify-content: center;
+            }
+
+            .daily-question-card {
+                width: 100%;
+                max-width: 800px;
+                height: 400px;
+                perspective: 1000px;
+                cursor: pointer;
+            }
+
+            .card-front, .card-back {
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                backface-visibility: hidden;
+                border-radius: 20px;
+                padding: 40px;
+                transition: transform 0.6s;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+                text-align: center;
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            }
+
+            .card-front {
+                transform: rotateY(0deg);
+            }
+
+            .card-back {
+                transform: rotateY(180deg);
+            }
+
+            .daily-question-card.flipped .card-front {
+                transform: rotateY(180deg);
+            }
+
+            .daily-question-card.flipped .card-back {
+                transform: rotateY(0deg);
+            }
+
+            .date-update {
+                position: absolute;
+                top: 20px;
+                right: 20px;
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 0.9rem;
+            }
+
+            .daily-question-title {
+                font-size: 2.5rem;
+                font-weight: bold;
+                color: white;
+                margin-bottom: 30px;
+                text-shadow: 
+                    0 0 15px rgba(100, 181, 246, 0.6),
+                    0 2px 4px rgba(0, 0, 0, 0.4);
+            }
+
+            .daily-question-difficulty {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 1.1rem;
+                margin-top: 20px;
+            }
+
+            .question-content {
+                color: white;
+                font-size: 1.1rem;
+                line-height: 1.6;
+                text-align: left;
+                width: 100%;
+                max-height: 320px;
+                overflow-y: auto;
+            }
+
+            /* 隐形滚动条 */
+            .question-content::-webkit-scrollbar {
+                width: 5px;
+            }
+
+            .question-content::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .question-content::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.2);
+                border-radius: 10px;
+            }
+
+            .question-content::-webkit-scrollbar-thumb:hover {
+                background: rgba(255, 255, 255, 0.3);
+            }
+
+            .question-content h3 {
+                margin-bottom: 15px;
+                font-size: 1.3rem;
+            }
+
+            .question-content p {
+                margin-bottom: 10px;
+            }
+
+            .question-content .options {
+                margin: 15px 0;
+            }
+
+            .question-content .option {
+                margin-bottom: 10px;
+                padding: 10px 15px;
+                border-radius: 10px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+
+            .question-content .option:hover {
+                background: rgba(255, 255, 255, 0.1);
+            }
+
+            .question-content .option:active {
+                background: rgba(255, 255, 255, 0.2);
+            }
+
+            .question-content .answer {
+                margin-top: 20px;
+                font-weight: bold;
+            }
+
+            .question-content .explanation {
+                margin-top: 15px;
+                font-style: italic;
+            }
+
+            @media (max-width: 768px) {
+                .daily-question-card {
+                    height: 450px;
+                }
+
+                .card-front, .card-back {
+                    padding: 30px;
+                }
+
+                .daily-question-title {
+                    font-size: 2rem;
+                }
+
+                .question-content {
+                    font-size: 1rem;
+                }
+            }
+        </style>
+
+        <script>
+            // 每日一题数据
+            const questions = [
+                {
+                    title: "第1题（螺栓防松）",
+                    question: "关于弹簧垫圈的防松效果，下列哪种说法最符合现代工程实践？",
+                    options: [
+                        "A. 弹簧垫圈在所有振动工况下都能有效防松，是最可靠的防松方式",
+                        "B. 弹簧垫圈主要依靠斜口切入被连接件表面来防松，适用于软材料",
+                        "C. 在强烈振动环境下，弹簧垫圈的实际防松效果很差，甚至不如某些尼龙防松螺母",
+                        "D. 弹簧垫圈必须与平垫圈配合使用才能起防松作用"
+                    ],
+                    answer: "答案：C",
+                    explanation: "解析： 许多现代振动试验（如Junker试验）表明，传统弹簧垫圈在强烈横向振动下防松效果极差，甚至加速松动。它依靠弹力增加摩擦，但振动会使螺纹副相对滑动，弹力无法阻止。工业界已逐渐减少使用，改用尼龙嵌件螺母、涂胶或机械锁止方式。"
+                },
+                {
+                    title: "第2题（键连接）",
+                    question: "在锥形轴端上安装半圆键时，若将半圆键的圆弧面朝向轮毂、平面朝向轴槽底面，会发生什么？",
+                    options: [
+                        "A. 键无法装入，因为半圆键有方向性",
+                        "B. 键能装入，但承载能力大幅下降，容易滚动失效",
+                        "C. 无任何影响，半圆键可以任意方向安装",
+                        "D. 键会卡死在槽中，无法拆卸"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： 半圆键的正确安装方式是：圆弧面贴合轴槽底面，平面与轮毂槽底接触。若反装，键在轴槽中不稳定，受载时键会发生滚动，导致键槽压溃或键脱落。这是常见的设计陷阱，很多人误以为半圆键无方向性。"
+                },
+                {
+                    title: "第3题（滚动轴承）",
+                    question: "某机床主轴要求极高转速且需承受双向轴向载荷，选用了角接触球轴承。装配时，工人为了消除轴承游隙，施加了很大的预紧力。试问，这种做法最可能导致的后果是？",
+                    options: [
+                        "A. 轴承刚性更好，旋转精度更高，无不良影响",
+                        "B. 轴承摩擦剧增，温升极高，很快烧毁",
+                        "C. 轴承滚动体打滑，噪音增大",
+                        "D. 轴承内圈与轴发生相对转动"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： 角接触球轴承的预紧力需按设计值精确控制。过大的预紧力会急剧增加滚动体与滚道的接触应力及摩擦阻力，导致发热量呈指数级上升，在高速下尤其致命，几分钟内就可能使轴承胶合烧毁。许多人误以为\"预紧力越大，精度越高\"。"
+                },
+                {
+                    title: "第4题（O型圈密封）",
+                    question: "在往复运动液压缸中，O型圈作为活塞密封。安装时工人将O型圈直接套入沟槽，未涂抹润滑脂，且沟槽棱角锋利。活塞往复运动几次后，发现密封失效漏油。最可能的原因是什么？",
+                    options: [
+                        "A. O型圈材料不耐油，溶胀了",
+                        "B. O型圈在安装时被锐边剪切损伤，且运动中因无润滑发生扭转破裂",
+                        "C. O型圈压缩量不够，介质压力将其吹出",
+                        "D. 活塞运动速度过快，O型圈来不及回弹"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： O型圈安装时若不涂润滑脂且沟槽有锐边，极易在强行塞入时被划伤或剪切。更隐蔽的是：往复运动中，若摩擦阻力不均匀，O型圈会在沟槽内发生扭转（螺旋状变形），导致其被撕裂或挤入间隙。这种\"扭转失效\"是非专业人士完全想不到的。"
+                },
+                {
+                    title: "第5题（万向轴）",
+                    question: "某工程机械采用单十字轴式万向联轴器连接发动机与变速箱，两轴夹角为25°。机器运转时，从动轴转速出现周期性波动，且车身有明显抖动。以下哪种说法正确？",
+                    options: [
+                        "A. 这是正常现象，单万向节必然产生不等速，夹角越大波动越剧烈",
+                        "B. 万向节损坏，需要更换",
+                        "C. 润滑不良，加注润滑脂即可",
+                        "D. 主动轴转速不稳定，应检查发动机"
+                    ],
+                    answer: "答案：A",
+                    explanation: "解析： 很多人以为万向轴能等速传递运动，但单十字轴式万向节在主动轴匀速转动时，从动轴会按正弦规律产生二次波动，且夹角越大，波动幅度越大。这是其固有特性，无法通过润滑或更换消除。要等速必须使用双万向节且满足特定条件，或采用等速万向节（如球笼式）。此题考察对\"万向轴不等速性\"本质的理解。"
+                },
+                {
+                    title: "第6题（螺纹紧固件）",
+                    question: "在承受交变横向载荷的螺栓连接中，使用普通平垫圈有时反而会加速螺栓松动。这是因为：",
+                    options: [
+                        "A. 平垫圈增大了摩擦面积，导致预紧力衰减更快",
+                        "B. 平垫圈内外径不同，会使螺栓头支承面压力分布不均，诱发弯曲",
+                        "C. 平垫圈与螺栓头之间容易发生相对滑动，降低自锁能力",
+                        "D. 平垫圈会吸收一部分预紧力，使螺栓实际预紧不足"
+                    ],
+                    answer: "答案：C",
+                    explanation: "解析： 研究表明，在横向振动下，螺栓头或螺母与被连接件之间的摩擦力是防松的主要来源。如果中间加了平垫圈，就多了一个可相对滑动的界面（垫圈与螺栓头、垫圈与被连接件）。当垫圈与被连接件之间发生微小滑动时，会促使螺纹副产生相对转动，反而加速松动。这就是为什么某些高强度连接中禁用平垫圈。"
+                },
+                {
+                    title: "第7题（键连接）",
+                    question: "某减速器输出轴上安装一个齿轮，采用普通平键连接。齿轮轮毂的键槽采用了\"盘铣刀\"加工（键槽两端是圆弧形），而轴上的键槽采用了\"指状铣刀\"加工（键槽两端是半圆形）。装配时发现键无法放入。最可能的原因是：",
+                    options: [
+                        "A. 键的尺寸选错了",
+                        "B. 轴上键槽和轮毂键槽的端部形状不匹配，键的圆头无法同时进入两端",
+                        "C. 轴和轮毂的同轴度超差",
+                        "D. 键的材料热处理后变形"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： 平键有A型（圆头）、B型（平头）、C型（单圆头）。A型键两端为圆弧，对应轴上键槽也必须是盘铣刀加工的圆弧底槽；轮毂键槽若用盘铣刀也是圆弧形，则装配时A型键可以放入。但如果轮毂键槽是用指状铣刀加工的（两端是半圆头，中间是直壁），则A型键的圆头会与轮毂键槽的半圆头干涉，无法完全装入。正确的做法是使用B型平头键或加工时统一刀具。这是实际装配中常遇到的隐蔽问题。"
+                },
+                {
+                    title: "第8题（滚动轴承）",
+                    question: "一台电机采用深沟球轴承，运行一段时间后噪音增大，拆检发现轴承内圈与轴配合处出现了\"微动磨损（fretting wear）\"——内圈内表面呈红褐色粉末状。导致此现象的最根本原因是：",
+                    options: [
+                        "A. 轴承润滑脂不足",
+                        "B. 轴与轴承内圈的配合过松，存在微量相对运动",
+                        "C. 轴承承受了过大的轴向载荷",
+                        "D. 轴承材料有缺陷"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： 微动磨损是由于两个接触表面在微小振幅（微米级）的往复滑动下，表面氧化膜不断破裂又形成，产生红褐色氧化物（铁锈）。在滚动轴承中，当内圈与轴配合间隙过大（过盈量不足）时，在振动或变载荷下，内圈会在轴上发生极微小的周向或轴向滑动，导致微动磨损。很多人会误以为是润滑问题，但根本原因是配合选择不当。"
+                },
+                {
+                    title: "第9题（密封件）",
+                    question: "某液压系统使用O型圈作为端面静密封（如法兰连接）。系统压力为20MPa，O型圈截面直径3.53mm，沟槽深度2.8mm。试压时发现O型圈从法兰间隙中被挤出。以下哪种改进措施最有效且合理？",
+                    options: [
+                        "A. 增大O型圈截面直径",
+                        "B. 在O型圈外侧加装聚四氟乙烯挡圈（背托环）",
+                        "C. 减小沟槽深度以增大压缩率",
+                        "D. 更换为更硬的材料（如丁腈橡胶硬度90）"
+                    ],
+                    answer: "答案：B",
+                    explanation: "解析： 高压下O型圈被挤入密封间隙而损坏，最有效的措施是在低压侧加装挡圈。挡圈材料通常为聚四氟乙烯，硬度高且摩擦小。单纯增大硬度或压缩率只能部分改善，但压力高时仍需挡圈。另外，增大O型圈直径不能解决根本问题，反而可能影响安装。本题考察对高压密封设计的认知：挡圈是高压O型圈密封的必备元件。"
+                },
+                {
+                    title: "第10题（轴类零件）",
+                    question: "一根阶梯轴在轴肩处发生了疲劳断裂，断口分析显示裂纹起源于轴肩圆角表面。设计图纸上该圆角半径为R1，但实际测量发现圆角半径只有R0.5。导致圆角半径变小的最可能原因是：",
+                    options: [
+                        "A. 加工时刀具磨损，圆角未加工到位",
+                        "B. 工人为了提高装配便利性，故意修小了圆角",
+                        "C. 热处理后精磨时，砂轮未修整，磨出了尖角",
+                        "D. 图纸标注的圆角是理论值，实际加工未控制"
+                    ],
+                    answer: "答案：C",
+                    explanation: "解析： 这是一个很隐蔽的工程问题。阶梯轴通常先车出圆角（如R1），然后淬火，最后磨削轴颈表面。磨削时，砂轮的圆角半径如果小于设计圆角半径，会在轴肩根部磨出一个更小的圆角（甚至尖角），而这个尖角正是疲劳裂纹源。很多人检查图纸发现标注R1，实际测量却小了，以为是车加工问题，却忽略了磨削对圆角的二次改变。设计上应要求\"磨削前圆角应比图纸圆角大，磨后保证不小于图纸圆角\"，或直接标注\"磨削越程槽\"。"
+                }
+            ];
+
+            // 获取当前日期
+            function getCurrentDate() {
+                const now = new Date();
+                const year = now.getFullYear();
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const day = String(now.getDate()).padStart(2, '0');
+                return `${year}-${month}-${day}`;
+            }
+
+            // 计算今天应该显示第几题（基于日期）
+            function getQuestionIndex() {
+                const now = new Date();
+                const startDate = new Date('2024-01-01'); // 起始日期，可根据需要调整
+                const diffTime = Math.abs(now - startDate);
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                return (diffDays - 1) % questions.length;
+            }
+
+            // 显示日期
+            function displayDate() {
+                const dateString = getCurrentDate();
+                document.getElementById('front-date').textContent = `${dateString} 更新`;
+                document.getElementById('back-date').textContent = `${dateString} 更新`;
+            }
+
+            // 显示题目
+            function displayQuestion() {
+                const index = getQuestionIndex();
+                const question = questions[index];
+                const questionContent = document.getElementById('question-content');
+                
+                // 提取括号内的内容，支持中文全角括号
+                const titleText = question.title.replace(/^第\d+题\s*[\(（]/, '(').replace(/[\)）]$/, ')');
+                
+                let content = `
+                    <h3>${titleText}</h3>
+                    <p>${question.question}</p>
+                    <div class="options">
+                        ${question.options.map((option, i) => `
+                            <p class="option" onclick="checkAnswer(this, ${i}, '${question.answer.charAt(3)}'); event.stopPropagation();">${option}</p>
+                        `).join('')}
+                    </div>
+                    <div id="result" style="margin-top: 20px; display: none;">
+                        <p class="answer" id="answer"></p>
+                        <p class="explanation" id="explanation"></p>
+                    </div>
+                `;
+                
+                questionContent.innerHTML = content;
+            }
+
+            // 检查答案
+            function checkAnswer(element, optionIndex, correctAnswer) {
+                // 禁用所有选项
+                const options = document.querySelectorAll('.option');
+                options.forEach(opt => {
+                    opt.style.pointerEvents = 'none';
+                });
+                
+                // 检查用户选择是否正确
+                const userAnswer = String.fromCharCode(65 + optionIndex); // A, B, C, D
+                const isCorrect = userAnswer === correctAnswer;
+                
+                // 标记选择的选项
+                element.style.backgroundColor = isCorrect ? 'rgba(76, 175, 80, 0.3)' : 'rgba(244, 67, 54, 0.3)';
+                element.style.color = isCorrect ? 'rgb(76, 175, 80)' : 'rgb(244, 67, 54)';
+                
+                // 显示正确答案和解析
+                const result = document.getElementById('result');
+                const answerElement = document.getElementById('answer');
+                const explanationElement = document.getElementById('explanation');
+                
+                const index = getQuestionIndex();
+                const question = questions[index];
+                
+                // 处理答案显示，确保格式一致
+                answerElement.textContent = question.answer;
+                explanationElement.textContent = question.explanation;
+                result.style.display = 'block';
+            }
+
+            // 页面加载时初始化
+            window.onload = function() {
+                displayDate();
+                displayQuestion();
+            };
+        </script>
+    </div>
+
+    <a href="index.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card card-1"></div>
+    <div class="decorative-element card card-2"></div>
+    <div class="decorative-element card card-3"></div>
+
+    <div class="footer">
+        <p>handy制作的小网页</p>
+    </div>
+</body>
+</html>

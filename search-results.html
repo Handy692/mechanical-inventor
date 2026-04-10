@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>搜索结果 - 零件档案馆</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+            color: white;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 15px rgba(100, 181, 246, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.5s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 99999;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .suggestions-dropdown.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #1a237e;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:hover {
+            background: rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-highlight {
+            font-weight: 600;
+            color: #1a237e;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px 0 0 25px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            border-color: rgba(100, 181, 246, 0.8);
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.3);
+        }
+
+        .search-button {
+            padding: 12px 20px;
+            background: rgba(100, 181, 246, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 181, 246, 0.8);
+            border-radius: 0 25px 25px 0;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-button:hover {
+            background: rgba(100, 181, 246, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(100, 181, 246, 0.4);
+        }
+
+        .search-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .results-section {
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .results-header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        .results-count {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 20px;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 15px;
+            padding: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .result-card:hover {
+            background: rgba(100, 181, 246, 0.3);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+        }
+
+        .result-category {
+            font-size: 0.9rem;
+            color: rgba(100, 181, 246, 0.9);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .result-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .result-description {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .result-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .result-tag {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .no-results {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1.2rem;
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.8s;
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 20;
+            animation-delay: 2s;
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-1 {
+            top: 5%;
+            left: 2%;
+            animation: fadeInDownRotate1 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        .card-2 {
+            top: 10%;
+            right: 2%;
+            animation: fadeInDownRotate2 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .card-3 {
+            bottom: 5%;
+            right: 2%;
+            animation: fadeInDownRotate3 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes fadeInDownRotate1 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-15deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate2 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(20deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate3 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-10deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+
+            .search-container {
+                margin-bottom: 30px;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .result-card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">
+            <img src="images/书籍1_book-one.svg" alt="档案馆" style="width: 60px; height: 60px; filter: brightness(0) invert(1);">
+            搜索结果
+        </h1>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索零件...">
+            <button class="search-button" id="searchButton">
+                <img src="images/搜索_search.svg" alt="搜索">
+            </button>
+            <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
+        </div>
+        
+        <div class="results-section">
+            <div class="results-header">
+                <div class="results-count" id="resultsCount">正在搜索...</div>
+            </div>
+            
+            <div class="results-grid" id="resultsGrid">
+                
+            </div>
+        </div>
+    </div>
+
+    <a href="archives.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card card-1"></div>
+    <div class="decorative-element card card-2"></div>
+    <div class="decorative-element card card-3"></div>
+
+    <div class="footer">
+        <p>handy制作的小网页</p>
+    </div>
+
+    <script>
+        // 零件数据
+        const partsData = [
+            {
+                id: 'bolt',
+                name: '螺栓（外六角螺栓）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '最常用的螺纹紧固件，用于连接两个或多个零件',
+                tags: ['高强度', '螺纹连接', '可拆卸'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'nut',
+                name: '螺母（六角螺母）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '与螺栓配合使用的螺纹紧固件',
+                tags: ['锁紧', '防松', '标准件'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'screw',
+                name: '螺钉（十字槽盘头螺钉）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '头部带有槽的螺纹紧固件，常用于薄板连接',
+                tags: ['自攻', '精密', '小尺寸'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'rivet',
+                name: '铆钉（抽芯铆钉）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '不可拆卸的永久性紧固件',
+                tags: ['永久性', '铆接', '轻量化'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'washer',
+                name: '垫圈（平垫圈/弹簧垫圈）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '增加接触面积、分散压力、防松的辅助零件',
+                tags: ['防松', '平垫', '弹簧垫'],
+                level: '⭐'
+            },
+            {
+                id: 'key',
+                name: '键（平键 / 半圆键）',
+                category: '连接类零件',
+                page: 'connection-parts.html',
+                description: '用于连接轴和轮毂，传递扭矩的零件',
+                tags: ['键连接', '平键', '半圆键'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'gear',
+                name: '齿轮（直齿圆柱齿轮）',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '传递平行轴之间的旋转运动和扭矩',
+                tags: ['高承载', '定传动比', '圆周运动'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'helical-gear',
+                name: '斜齿圆柱齿轮',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '传递平行轴或交错轴间的运动，相比直齿轮啮合更平滑',
+                tags: ['平稳', '低噪音', '高速重载'],
+                level: '⭐⭐⭐⭐⭐'
+            },
+            {
+                id: 'bevel-gear',
+                name: '锥齿轮',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '传递两相交轴之间的旋转运动和扭矩',
+                tags: ['相交轴', '差速器', '空间传动'],
+                level: '⭐⭐⭐⭐⭐'
+            },
+            {
+                id: 'worm-gear',
+                name: '蜗杆蜗轮',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '传递空间交错轴之间的运动，能实现很大的减速比',
+                tags: ['大减速比', '自锁', '正交轴'],
+                level: '⭐⭐⭐⭐⭐'
+            },
+            {
+                id: 'pulley',
+                name: '带轮（V带轮/同步带轮）',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '通过皮带传递两平行轴之间的运动和动力',
+                tags: ['柔性', '缓冲吸振', '远距离'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'sprocket',
+                name: '链轮',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '通过链条传递平行轴间的运动和扭矩',
+                tags: ['无打滑', '重载低速', '准确传动比'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'coupling',
+                name: '联轴器（刚性/弹性联轴器）',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '连接两根轴，传递扭矩和运动',
+                tags: ['轴连接', '补偿误差', '传递扭矩'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'clutch',
+                name: '离合器',
+                category: '传动类零件',
+                page: 'transmission-parts.html',
+                description: '在机器运转中随时实现两轴的接合或分离',
+                tags: ['接合分离', '换挡控制', '动力切断'],
+                level: '⭐⭐⭐⭐⭐'
+            },
+            {
+                id: 'ball-bearing',
+                name: '滚动轴承（深沟球轴承）',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '支撑旋转轴，承受径向和少量双向轴向载荷',
+                tags: ['低摩擦', '高转速', '通用'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'angular-bearing',
+                name: '角接触球轴承',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '同时承受径向和较大的单向轴向载荷',
+                tags: ['联合载荷', '高速', '主轴专用'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'cylindrical-bearing',
+                name: '圆柱滚子轴承',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '承受极大的径向载荷，适用于重载、低速或冲击工况',
+                tags: ['重径向载荷', '高刚性', '低速'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'plain-bearing',
+                name: '滑动轴承',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '在高速、重载或冲击工况下支撑旋转轴',
+                tags: ['高速', '重载', '耐冲击'],
+                level: '⭐⭐⭐⭐⭐'
+            },
+            {
+                id: 'linear-guide',
+                name: '导轨（直线导轨）',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '为直线运动部件提供精确导向',
+                tags: ['高精度', '低摩擦', '刚性导向'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'guide-pin',
+                name: '导柱导套',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '在塑料模具或冲压模具中，保证动模与定模准确对合',
+                tags: ['模具导向', '开合模精度', '耐磨'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'shaft',
+                name: '轴（阶梯轴/光轴）',
+                category: '支撑与导向类零件',
+                page: 'support-parts.html',
+                description: '支撑齿轮、带轮、轴承等传动零件，传递扭矩和弯矩',
+                tags: ['承载旋转件', '传递扭矩', '机械骨架'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'compression-spring',
+                name: '圆柱螺旋压缩弹簧',
+                category: '弹簧与弹性元件',
+                page: 'spring-parts.html',
+                description: '承受轴向压力，压缩时储存能量，释放时回弹',
+                tags: ['压缩复位', '缓冲减振', '储能'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'tension-spring',
+                name: '圆柱螺旋拉伸弹簧',
+                category: '弹簧与弹性元件',
+                page: 'spring-parts.html',
+                description: '承受轴向拉力，拉伸时储存能量，释放时收缩回位',
+                tags: ['拉伸复位', '预紧力', '钩环连接'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'torsion-spring',
+                name: '扭簧',
+                category: '弹簧与弹性元件',
+                page: 'spring-parts.html',
+                description: '承受扭矩，绕轴线扭转后产生反向扭矩',
+                tags: ['扭转复位', '扭矩储能', '角度回弹'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'disc-spring',
+                name: '碟形弹簧',
+                category: '弹簧与弹性元件',
+                page: 'spring-parts.html',
+                description: '在极小变形量下承受极大载荷',
+                tags: ['大载荷小变形', '组合灵活', '重载缓冲'],
+                level: '⭐⭐⭐⭐'
+            },
+            {
+                id: 'gas-spring',
+                name: '气弹簧',
+                category: '弹簧与弹性元件',
+                page: 'spring-parts.html',
+                description: '利用密闭气体压力提供支撑力、缓冲力或推力',
+                tags: ['恒力支撑', '可控速度', '免维护'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'seal',
+                name: '密封圈（O型圈/油封）',
+                category: '其他常用机械零件',
+                page: 'other-parts.html',
+                description: '防止流体泄漏或外界杂质侵入',
+                tags: ['密封', '耐油', '耐高温'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'grease',
+                name: '润滑脂/油杯',
+                category: '其他常用机械零件',
+                page: 'other-parts.html',
+                description: '减少摩擦、防止锈蚀、延长使用寿命',
+                tags: ['润滑', '防锈', '轴承保养'],
+                level: '⭐'
+            },
+            {
+                id: 'retaining-ring',
+                name: '挡圈（轴用/孔用弹性挡圈）',
+                category: '其他常用机械零件',
+                page: 'other-parts.html',
+                description: '防止零件轴向移动的弹性紧固件',
+                tags: ['轴向定位', '弹性挡圈', '卡簧'],
+                level: '⭐⭐'
+            },
+            {
+                id: 'flange',
+                name: '法兰盘',
+                category: '其他常用机械零件',
+                page: 'other-parts.html',
+                description: '用于管道连接或设备安装的圆盘状零件',
+                tags: ['管道连接', '法兰连接', '密封面'],
+                level: '⭐⭐⭐'
+            },
+            {
+                id: 'universal-joint',
+                name: '万向节',
+                category: '其他常用机械零件',
+                page: 'other-parts.html',
+                description: '连接相交轴并允许角度变化的传动元件',
+                tags: ['角度补偿', '传动轴', '汽车传动'],
+                level: '⭐⭐⭐⭐'
+            }
+        ];
+
+        function searchParts(query) {
+            if (!query.trim()) {
+                return [];
+            }
+            
+            query = query.toLowerCase();
+            
+            return partsData.filter(part => {
+                return part.name.toLowerCase().includes(query) ||
+                       part.description.toLowerCase().includes(query) ||
+                       part.tags.some(tag => tag.toLowerCase().includes(query)) ||
+                       part.category.toLowerCase().includes(query);
+            });
+        }
+
+        function displayResults(results) {
+            const resultsGrid = document.getElementById('resultsGrid');
+            const resultsCount = document.getElementById('resultsCount');
+            
+            if (results.length === 0) {
+                resultsCount.textContent = '没有找到匹配的零件';
+                resultsGrid.innerHTML = `
+                    <div class="no-results">
+                        <p>没有找到与搜索关键词匹配的零件</p>
+                        <p style="margin-top: 10px; font-size: 0.9rem;">请尝试其他关键词或检查拼写</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            resultsCount.textContent = `找到 ${results.length} 个匹配的零件`;
+            
+            resultsGrid.innerHTML = results.map(part => `
+                <div class="result-card" onclick="goToPart('${part.page}', '${part.id}')">
+                    <div class="result-category">${part.category}</div>
+                    <div class="result-title">${part.name}</div>
+                    <div class="result-description">${part.description}</div>
+                    <div class="result-tags">
+                        ${part.tags.map(tag => `<span class="result-tag">${tag}</span>`).join('')}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function goToPart(page, partId) {
+            window.location.href = `${page}#${partId}`;
+        }
+
+        // 处理搜索
+        document.getElementById('searchButton').addEventListener('click', function() {
+            const query = document.getElementById('searchInput').value;
+            const results = searchParts(query);
+            displayResults(results);
+        });
+
+        // 按回车搜索
+        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                const query = this.value;
+                const results = searchParts(query);
+                displayResults(results);
+            }
+        });
+
+        // 搜索联想功能
+        let suggestionsTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDropdown = document.getElementById('suggestionsDropdown');
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(suggestionsTimeout);
+            
+            const query = this.value.toLowerCase().trim();
+            
+            if (query.length > 0) {
+                suggestionsTimeout = setTimeout(() => {
+                    const suggestions = partsData
+                        .filter(part => part.name.toLowerCase().includes(query) || 
+                                part.description.toLowerCase().includes(query) ||
+                                part.tags.some(tag => tag.toLowerCase().includes(query)) ||
+                                part.category.toLowerCase().includes(query))
+                        .slice(0, 5);
+                    
+                    displaySuggestions(suggestions, query);
+                }, 300);
+            } else {
+                hideSuggestions();
+            }
+        });
+
+        // 点击页面其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !suggestionsDropdown.contains(event.target)) {
+                hideSuggestions();
+            }
+        });
+
+        // 使用事件委托处理下拉菜单点击
+        suggestionsDropdown.addEventListener('click', function(event) {
+            console.log('下拉菜单点击事件触发');
+            event.stopPropagation(); // 阻止事件冒泡
+            const suggestionItem = event.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                console.log('找到联想项:', suggestionItem.textContent);
+                const suggestion = suggestionItem.textContent.trim();
+                searchInput.value = suggestion;
+                hideSuggestions();
+                const results = searchParts(suggestion);
+                displayResults(results);
+            }
+        });
+
+        // 显示联想建议
+        function displaySuggestions(suggestions, query) {
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+            
+            suggestionsDropdown.innerHTML = suggestions.map(part => {
+                const highlightedName = highlightText(part.name, query);
+                return `
+                    <div class="suggestion-item">
+                        ${highlightedName}
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDropdown.classList.add('show');
+        }
+
+        // 隐藏联想建议
+        function hideSuggestions() {
+            suggestionsDropdown.classList.remove('show');
+        }
+
+        // 高亮匹配文本
+        function highlightText(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+        }
+
+        // 页面加载时检查URL参数
+        window.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const query = urlParams.get('q');
+            
+            if (query) {
+                document.getElementById('searchInput').value = query;
+                const results = searchParts(query);
+                displayResults(results);
+            }
+        });
+    </script>
+</body>
+</html>

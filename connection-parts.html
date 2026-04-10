@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零件档案馆 - 连接类零件</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        .model-container {
+            width: 100%;
+            height: 400px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            margin: 30px 0;
+            position: relative;
+            overflow: hidden;
+            transition: opacity 0.3s ease;
+            opacity: 1;
+        }
+        
+        .sketchfab-embed-wrapper {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        
+        .sketchfab-embed-wrapper iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .fullscreen-button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 10;
+            transition: all 0.3s ease;
+        }
+        
+        .fullscreen-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+        
+        #modelViewer {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .model-controls {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .model-button {
+            padding: 10px 20px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .model-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        
+        .model-button.active {
+            background: rgba(100, 181, 246, 0.8);
+            border-color: rgba(100, 181, 246, 0.5);
+        }
+        
+        .model-info {
+            text-align: center;
+            color: white;
+            margin-top: 10px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+            color: white;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 15px rgba(100, 181, 246, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.5s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 99999;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .suggestions-dropdown.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #1a237e;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:hover {
+            background: rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-highlight {
+            font-weight: 600;
+            color: #1a237e;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px 0 0 25px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            border-color: rgba(100, 181, 246, 0.8);
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.3);
+        }
+
+        .search-button {
+            padding: 12px 20px;
+            background: rgba(100, 181, 246, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 181, 246, 0.8);
+            border-radius: 0 25px 25px 0;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            background: rgba(100, 181, 246, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(100, 181, 246, 0.4);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 30px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .parts-list {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .parts-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .parts-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .parts-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .parts-list:hover::-webkit-scrollbar-thumb,
+        .parts-list:focus-within::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        .parts-list h2 {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: white;
+            text-align: center;
+        }
+
+        .part-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin-bottom: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .part-item:hover {
+            background: rgba(100, 181, 246, 0.3);
+            transform: translateX(5px);
+            border-color: rgba(100, 181, 246, 0.5);
+        }
+
+        .part-item.active {
+            background: rgba(100, 181, 246, 0.4);
+            border-color: rgba(100, 181, 246, 0.8);
+        }
+
+        .part-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 螺栓图标 */
+        .icon-bolt::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 25px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 2px;
+        }
+        .icon-bolt::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            width: 20px;
+            height: 15px;
+            background: rgba(100, 181, 246, 0.9);
+            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
+        }
+
+        /* 螺母图标 */
+        .icon-nut::before {
+            content: '';
+            position: absolute;
+            width: 18px;
+            height: 18px;
+            background: rgba(100, 181, 246, 0.9);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .icon-nut::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+
+        /* 垫圈图标 */
+        .icon-washer::before {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 4px solid rgba(100, 181, 246, 0.9);
+            border-radius: 50%;
+        }
+
+        /* 螺钉图标 */
+        .icon-screw::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 20px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 2px;
+        }
+        .icon-screw::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 4px;
+        }
+
+        /* 销钉图标 */
+        .icon-pin::before {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 30px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 4px;
+        }
+
+        /* 键图标 */
+        .icon-key::before {
+            content: '';
+            position: absolute;
+            width: 25px;
+            height: 10px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 4px;
+        }
+
+        /* 铆钉图标 */
+        .icon-rivet::before {
+            content: '';
+            position: absolute;
+            width: 6px;
+            height: 25px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 3px 3px 0 0;
+        }
+        .icon-rivet::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            width: 15px;
+            height: 6px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 3px;
+        }
+
+        .part-info {
+            flex: 1;
+        }
+
+        .part-name {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .part-level {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .part-details {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: opacity 0.3s ease;
+            opacity: 1;
+            height: 600px;
+            overflow-y: auto;
+        }
+
+        .part-details::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .part-details::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .part-details::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .part-details:hover::-webkit-scrollbar-thumb,
+        .part-details:focus-within::-webkit-scrollbar-thumb {
+            opacity: 1;
+        }
+
+        .detail-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .detail-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* 详情图标样式 */
+        .detail-icon.icon-bolt::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 50px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 4px;
+        }
+        .detail-icon.icon-bolt::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            width: 40px;
+            height: 30px;
+            background: rgba(100, 181, 246, 0.9);
+            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
+        }
+
+        .detail-icon.icon-nut::before {
+            content: '';
+            position: absolute;
+            width: 36px;
+            height: 36px;
+            background: rgba(100, 181, 246, 0.9);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+        }
+        .detail-icon.icon-nut::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }
+
+        .detail-icon.icon-washer::before {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border: 8px solid rgba(100, 181, 246, 0.9);
+            border-radius: 50%;
+        }
+
+        .detail-icon.icon-screw::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 40px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 4px;
+        }
+        .detail-icon.icon-screw::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            width: 30px;
+            height: 30px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 8px;
+        }
+
+        .detail-icon.icon-pin::before {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 60px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 8px;
+        }
+
+        .detail-icon.icon-key::before {
+            content: '';
+            position: absolute;
+            width: 50px;
+            height: 20px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 8px;
+        }
+
+        .detail-icon.icon-rivet::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 50px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 6px 6px 0 0;
+        }
+        .detail-icon.icon-rivet::after {
+            content: '';
+            position: absolute;
+            top: 10px;
+            width: 30px;
+            height: 12px;
+            background: rgba(100, 181, 246, 0.9);
+            border-radius: 6px;
+        }
+
+        .detail-title {
+            flex: 1;
+        }
+
+        .detail-title h2 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .detail-level {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .detail-content {
+            line-height: 1.8;
+        }
+
+        .detail-section {
+            margin-bottom: 25px;
+        }
+
+        .detail-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: rgba(100, 181, 246, 0.9);
+        }
+
+        .detail-section p {
+            margin-bottom: 10px;
+        }
+
+        .model-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .model-section h3 {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            color: rgba(100, 181, 246, 0.9);
+        }
+
+        .model-placeholder {
+            width: 100%;
+            height: 300px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.8s;
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 20;
+            animation-delay: 2s;
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-1 {
+            top: 5%;
+            left: 2%;
+            animation: fadeInDownRotate1 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        .card-2 {
+            top: 10%;
+            right: 2%;
+            animation: fadeInDownRotate2 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .card-3 {
+            bottom: 5%;
+            right: 2%;
+            animation: fadeInDownRotate3 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes fadeInDownRotate1 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-15deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate2 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(20deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate3 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-10deg);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .parts-list {
+                max-height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+                margin-bottom: 20px;
+            }
+
+            .search-container {
+                margin-bottom: 30px;
+            }
+
+            .part-details {
+                padding: 30px 20px;
+            }
+
+            .detail-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .detail-icon {
+                margin-right: 0;
+                margin-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">
+            <img src="images/书籍1_book-one.svg" alt="档案馆" style="width: 60px; height: 60px; filter: brightness(0) invert(1);">
+            零件档案馆
+        </h1>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索零件..." onkeypress="handleKeyPress(event)">
+            <button class="search-button" onclick="performSearch()">
+                <img src="images/搜索_search.svg" alt="搜索">
+            </button>
+            <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
+        </div>
+        
+        <div class="main-content">
+            <div class="parts-list">
+                <h2>连接类零件</h2>
+                <div class="part-item active" data-part="bolt">
+                    <div class="part-icon icon-bolt"></div>
+                    <div class="part-info">
+                        <div class="part-name">螺栓（六角头螺栓）</div>
+                        <div class="part-level">学习难度：⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="nut">
+                    <div class="part-icon icon-nut"></div>
+                    <div class="part-info">
+                        <div class="part-name">螺母（六角螺母）</div>
+                        <div class="part-level">学习难度：⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="washer">
+                    <div class="part-icon icon-washer"></div>
+                    <div class="part-info">
+                        <div class="part-name">垫圈（平垫圈 / 弹簧垫圈）</div>
+                        <div class="part-level">学习难度：⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="screw">
+                    <div class="part-icon icon-screw"></div>
+                    <div class="part-info">
+                        <div class="part-name">螺钉（内六角 / 十字槽螺钉）</div>
+                        <div class="part-level">学习难度：⭐⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="pin">
+                    <div class="part-icon icon-pin"></div>
+                    <div class="part-info">
+                        <div class="part-name">销钉（圆柱销 / 圆锥销）</div>
+                        <div class="part-level">学习难度：⭐⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="key">
+                    <div class="part-icon icon-key"></div>
+                    <div class="part-info">
+                        <div class="part-name">键（平键 / 半圆键）</div>
+                        <div class="part-level">学习难度：⭐⭐⭐⭐</div>
+                    </div>
+                </div>
+                <div class="part-item" data-part="rivet">
+                    <div class="part-icon icon-rivet"></div>
+                    <div class="part-info">
+                        <div class="part-name">铆钉</div>
+                        <div class="part-level">学习难度：⭐⭐⭐</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="part-details">
+                <div id="bolt-details" class="part-detail-content">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-bolt"></div>
+                        <div class="detail-title">
+                            <h2>螺栓（六角头螺栓）</h2>
+                            <div class="detail-level">学习难度：⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>紧固件中的螺纹连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>可拆卸、高强度、通用。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>与螺母配合，将两个带通孔的零件夹紧固定，实现可拆卸连接。结构拆解：头部为六角形，便于扳手施力；杆部为带有外螺纹的圆柱体。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>螺栓穿过两个零件的通孔，另一端旋入螺母，通过拧紧螺母使螺栓受拉，产生预紧力，将零件压紧。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>按头部形式有六角头、小六角头、铰制孔用螺栓等；性能等级从3.6到12.9级；公称直径M1.6~M64。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>机械设备、钢结构桥梁、建筑模板、汽车装配等需要经常拆装的部位。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>螺栓露出螺母的螺纹长度不应少于2个螺距；需根据载荷选择合适性能等级；预紧力过大会导致螺栓断裂。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>螺栓最早可追溯到15世纪的螺丝和螺母，但直到19世纪工业化生产后才标准化。六角头设计并非偶然——60°夹角既方便工具旋转，又能承受较大的拧紧力矩。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="nut-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-nut"></div>
+                        <div class="detail-title">
+                            <h2>螺母（六角螺母）</h2>
+                            <div class="detail-level">学习难度：⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>紧固件中的内螺纹连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>配合螺栓、锁紧、通用。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>与螺栓组成螺纹副，提供锁紧力，将零件压紧。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>结构拆解</h3>
+                            <p>外形为六角棱柱，中心有通孔并加工出内螺纹。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>螺母旋入螺栓后，其内螺纹与螺栓外螺纹啮合，通过旋转螺母使螺纹斜面产生轴向力，从而夹紧被连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>普通六角螺母、薄螺母（防松用）、尼龙防松螺母、法兰面螺母；螺纹精度分粗牙和细牙；公称直径M1.6~M64。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>几乎与螺栓同步使用，常见于机械装配、管道法兰、电力金具等。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>同一连接副中螺母的强度等级应与螺栓匹配（如8级螺母配8.8级螺栓）；薄螺母不能单独作为主螺母使用。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>螺母的“对边尺寸”通常比螺栓头略小，以便在狭小空间操作。还有一种“蝶形螺母”可不借助工具手拧，最早用于马车轮轴。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="washer-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-washer"></div>
+                        <div class="detail-title">
+                            <h2>垫圈（平垫圈 / 弹簧垫圈）</h2>
+                            <div class="detail-level">学习难度：⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>紧固件中的辅助件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>防松、保护表面、压力分散。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>增加接触面积、防止螺栓头或螺母压伤工件表面，并提供一定的防松效果。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>结构拆解</h3>
+                            <p>平垫圈为环形金属薄片；弹簧垫圈为带有斜向切口的椭圆形或矩形截面环，呈螺旋状。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>平垫圈通过增大承压面积减小压强，避免工件变形或划伤；弹簧垫圈利用自身的弹性和切口边缘的楔入作用，在振动时保持螺栓预紧力，防止松动。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>平垫圈分A级、C级（精度不同）；弹簧垫圈标准为GB/T 93，常见规格从2mm到48mm；另有方斜垫圈（用于工字钢等斜面）。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>平垫圈广泛用于金属、塑料、木材连接；弹簧垫圈常用于有振动的设备如发动机、电机底座。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>弹簧垫圈不能用于高强度螺栓连接（易导致疲劳断裂）；软质材料表面必须加平垫圈。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>最早的垫圈是皮革或软木制成，用于密封水管。现代弹簧垫圈的切口方向有讲究——切口应朝向螺母旋转的相反方向，以增强楔入效果。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="screw-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-screw"></div>
+                        <div class="detail-title">
+                            <h2>螺钉（内六角 / 十字槽螺钉）</h2>
+                            <div class="detail-level">学习难度：⭐⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>紧固件中的单头螺纹连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>自攻或机械螺纹、无需螺母、沉头可选。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>旋入一个零件预先加工的内螺纹孔（或自攻形成螺纹），将两个零件固定，无需配合螺母。结构拆解：头部有内六角或十字槽等驱动形式，杆部为全螺纹或部分螺纹。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>螺钉穿过第一个零件的通孔，其螺纹端旋入第二个零件的螺纹孔中，拧紧后靠螺纹啮合和头部压紧实现固定。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>内六角圆柱头螺钉（高强度）、十字槽沉头螺钉（表面平整）、十字槽盘头螺钉；机械螺钉（需预制螺纹孔）和自攻螺钉（可钻入薄板）；规格M1.6~M36。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>内六角螺钉用于模具、机床；十字槽螺钉用于电子产品、家具、电器外壳装配。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>沉头螺钉的锥头角度通常为90°或82°，需配合沉孔使用；内六角扳手必须完全插入才能施力，否则会滑牙。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>十字槽螺钉由美国公司Phillips在1930年代发明，初衷是让螺丝刀在达到一定扭矩时自动滑出，避免过拧——这个“缺陷”反而成了防呆设计。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="pin-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-pin"></div>
+                        <div class="detail-title">
+                            <h2>销钉（圆柱销 / 圆锥销）</h2>
+                            <div class="detail-level">学习难度：⭐⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>定位紧固件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>定位、防转、传递小扭矩。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>将两个零件精确固定在相对位置，防止错位，并可传递不大的剪切力。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>结构拆解</h3>
+                            <p>圆柱销为等径圆柱体，两端倒角；圆锥销为带有1:50锥度的圆锥体，小端有螺纹孔（便于拔出）。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>销钉插入两个零件上精加工的销孔中，圆柱销靠过盈配合固定，圆锥销靠自锁锥面定位；当受剪切力时，销钉本身承受剪切变形。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>圆柱销（GB/T 119.1）、内螺纹圆柱销、圆锥销（GB/T 117）、开尾圆锥销；公称直径0.8mm~50mm。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>模具导柱定位、变速箱盖与箱体定位、连杆小头与活塞销连接、防止轴肩转动。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>圆柱销安装需要压入，孔的公差必须严格（H7或P6）；圆锥销的锥度配合保证自锁，但拆卸时需从小端敲出或使用拔销器。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>古代木结构中的“木销”就是销钉的前身。现代飞机发动机中，高温区域的销钉使用镍基合金制造，能在1000℃下保持强度。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="key-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-key"></div>
+                        <div class="detail-title">
+                            <h2>键（平键 / 半圆键）</h2>
+                            <div class="detail-level">学习难度：⭐⭐⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>轴毂连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>传递扭矩、导向、防周向滑动。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>连接轴与轮毂（齿轮、带轮、联轴器等），传递旋转运动和扭矩。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>结构拆解</h3>
+                            <p>平键为长方体金属块；半圆键呈半圆形，顶部为弧形。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>键嵌入轴上的键槽和轮毂的键槽中，靠键的侧面传递扭矩，工作时键受挤压和剪切。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>普通平键（A型圆头、B型平头、C型单圆头）、导向平键（可轴向滑动）、半圆键（自动调心）、楔键（靠斜面传递轴向力）；平键宽度从2mm到100mm。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>减速机齿轮与轴连接、电机轴与带轮、大型回转窑的传动装置。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>键的强度校核主要是挤压应力和剪切应力；安装时键与键槽两侧应紧密贴合，而顶面需留有间隙（0.2~0.5mm）。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>键的历史可追溯到蒸汽机时代，最早的键是方形的。半圆键专门用于锥形轴端，它的底面是半圆形，与轴上的弧形槽完美贴合，能自动补偿一定的角度偏差。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="rivet-details" class="part-detail-content" style="display: none;">
+                    <div class="detail-header">
+                        <div class="detail-icon icon-rivet"></div>
+                        <div class="detail-title">
+                            <h2>铆钉</h2>
+                            <div class="detail-level">学习难度：⭐⭐⭐</div>
+                        </div>
+                    </div>
+                    <div class="detail-content">
+                        <div class="detail-section">
+                            <h3>所属分类</h3>
+                            <p>不可拆卸紧固件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心标签</h3>
+                            <p>永久连接、抗剪切、钣金工艺。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>核心作用</h3>
+                            <p>将两个或多个零件永久性地铆合在一起，形成不可拆卸的连接。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>结构拆解</h3>
+                            <p>由钉头和钉杆组成，钉杆末端在铆接时形成另一个钉头。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>工作原理</h3>
+                            <p>将铆钉插入预制孔中，利用铆枪或压力机使钉杆末端变形扩大，形成第二个钉头，从而夹紧被连接件。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>常见类型/规格</h3>
+                            <p>半圆头铆钉、沉头铆钉、抽芯铆钉（拉铆钉）、空心铆钉；材质有钢、不锈钢、铝、铜；直径1mm~36mm。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>应用场景</h3>
+                            <p>飞机蒙皮、桥梁桁架、钢制烟囱、集装箱、剪刀、汽车刹车片等需要永久固定的场合。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>注意事项</h3>
+                            <p>铆接前孔的对中度要求高；抽芯铆钉不适用于重载；热铆（加热后铆接）用于大型钢结构，冷却后产生预紧力。</p>
+                        </div>
+                        <div class="detail-section">
+                            <h3>趣味小知识</h3>
+                            <p>铆接是飞机结构的首选连接方式，因为铆钉不会像焊接那样产生热应力裂纹。著名的埃菲尔铁塔用了250万颗铆钉，每颗都是热铆后由工人用大锤敲击成型。</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="model-section">
+                    <h3>3D模型展示</h3>
+                    <div class="model-container" id="modelContainer">
+                        <button class="fullscreen-button" onclick="toggleFullscreen()" title="全屏">⛶</button>
+                        <model-viewer id="modelViewer" alt="3D模型" auto-rotate camera-controls style="width: 100%; height: 100%;"></model-viewer>
+                    </div>
+                    <div class="model-controls">
+                        <!-- 模型控制按钮将通过JavaScript动态生成 -->
+                    </div>
+                    <div class="model-info">
+                        提示：拖动旋转模型，滚轮缩放，点击可查看详情
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <a href="archives.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card card-1"></div>
+    <div class="decorative-element card card-2"></div>
+    <div class="decorative-element card card-3"></div>
+
+    <div class="footer">
+        <p>handy制作的小网页</p>
+    </div>
+
+    <!-- Model Viewer -->
+    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.js"></script>
+    
+    <script>
+        // 模型文件映射 - 每个词条对应的模型
+        const partModelsMap = {
+            'bolt': [
+                { id: 'bolt', name: '六角螺栓', file: 'model2/1.1 Hexagon bolt.glb' }
+            ],
+            'nut': [
+                { id: 'nut', name: '六角螺母', file: 'model2/1.2 Hex nut.glb' }
+            ],
+            'washer': [
+                { id: 'flat-washer', name: '平垫圈', file: 'model2/1.3 Flat washer.glb' },
+                { id: 'spring-washer', name: '弹簧垫圈', file: 'model2/1.3 Spring Washer.glb' }
+            ],
+            'screw': [
+                { id: 'hex-socket-screw', name: '内六角螺钉', file: 'model2/1.4Hex socket screw.glb' },
+                { id: 'phillips-screw', name: '十字槽螺钉', file: 'model2/1.4 Phillips Screw.glb' }
+            ],
+            'pin': [
+                { id: 'cylindrical-pin', name: '圆柱销', file: 'model2/1.5 Cylindrical Pin.glb' },
+                { id: 'taper-pin', name: '圆锥销', file: 'model2/1.5 Taper Pin.glb' }
+            ],
+            'key': [
+                { id: 'half-round-key', name: '半圆键', file: 'model2/1.6 Half-round Key.glb' },
+                { id: 'flat-key', name: '平键', file: 'model2/1.6 Flat Key.glb' }
+            ],
+            'rivet': [
+                { id: 'rivet', name: '铆钉', file: 'model2/1.7 Rivet.glb' }
+            ]
+        };
+        
+        // 当前选中的零件ID和模型ID
+        let currentPartId = 'bolt';
+        let currentModelId = 'bolt';
+        
+        // 切换模型函数（用于模型控制按钮）
+        function switchModel(modelId) {
+            if (currentModelId !== modelId) {
+                // 更新按钮状态
+                document.querySelectorAll('.model-button').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                event.target.classList.add('active');
+                
+                currentModelId = modelId;
+                loadModel(modelId);
+            }
+        }
+        
+        // 根据零件ID更新模型和详情
+        function updateModelForPart(partId) {
+            // 获取元素
+            const partDetails = document.querySelector('.part-details');
+            const modelContainer = document.getElementById('modelContainer');
+            
+            // 淡出效果
+            partDetails.style.opacity = '0';
+            modelContainer.style.opacity = '0';
+            
+            // 等待淡出完成后更新内容
+            setTimeout(() => {
+                currentPartId = partId;
+                
+                // 更新零件详情显示
+                updatePartDetails(partId);
+                
+                // 更新模型控制按钮
+                updateModelControls(partId);
+                
+                // 加载第一个模型
+                const models = partModelsMap[partId];
+                if (models && models.length > 0) {
+                    currentModelId = models[0].id;
+                    loadModel(currentModelId);
+                }
+                
+                // 淡入效果
+                setTimeout(() => {
+                    partDetails.style.opacity = '1';
+                    modelContainer.style.opacity = '1';
+                }, 50);
+            }, 300);
+        }
+        
+        // 更新零件详情显示
+        function updatePartDetails(partId) {
+            // 更新活动状态
+            document.querySelectorAll('.part-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`.part-item[data-part="${partId}"]`).classList.add('active');
+            
+            // 显示对应详情
+            document.querySelectorAll('.part-detail-content').forEach(detail => {
+                detail.style.display = 'none';
+            });
+            document.getElementById(partId + '-details').style.display = 'block';
+        }
+        
+        // 更新模型控制按钮
+        function updateModelControls(partId) {
+            const controlsContainer = document.querySelector('.model-controls');
+            controlsContainer.innerHTML = '';
+            
+            const models = partModelsMap[partId];
+            if (models) {
+                models.forEach((model, index) => {
+                    const button = document.createElement('button');
+                    button.className = 'model-button' + (index === 0 ? ' active' : '');
+                    button.textContent = model.name;
+                    button.onclick = () => switchModel(model.id);
+                    controlsContainer.appendChild(button);
+                });
+            }
+        }
+        
+        // 加载模型
+        function loadModel(modelId) {
+            const modelViewer = document.getElementById('modelViewer');
+            
+            // 查找模型信息
+            let modelInfo = null;
+            for (const partId in partModelsMap) {
+                const models = partModelsMap[partId];
+                const found = models.find(m => m.id === modelId);
+                if (found) {
+                    modelInfo = found;
+                    break;
+                }
+            }
+            
+            if (modelInfo) {
+                modelViewer.src = modelInfo.file;
+                modelViewer.alt = modelInfo.name;
+                console.log('加载模型:', modelInfo.name);
+            } else {
+                console.warn('模型未找到:', modelId);
+                modelViewer.src = '';
+                modelViewer.alt = '模型未配置';
+            }
+        }
+        
+        // 获取零件中文名称
+        function getPartName(partId) {
+            const partNames = {
+                'bolt': '六角螺栓',
+                'nut': '六角螺母',
+                'washer': '垫圈',
+                'screw': '螺钉',
+                'pin': '销钉',
+                'key': '键',
+                'rivet': '铆钉'
+            };
+            return partNames[partId] || '未知零件';
+        }
+        
+        // 当切换零件时更新模型
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.part-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const partId = item.getAttribute('data-part');
+                    updateModelForPart(partId);
+                });
+            });
+            
+            // 初始化时根据当前显示的零件加载模型
+            setTimeout(() => {
+                const activePart = document.querySelector('.part-item.active');
+                if (activePart) {
+                    const partId = activePart.getAttribute('data-part');
+                    updateModelForPart(partId);
+                }
+            }, 100);
+        });
+        
+        // 搜索功能
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                window.location.href = `search-results.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        }
+
+        // 零件数据（用于搜索联想）
+        const partsData = [
+            { id: 'bolt', name: '螺栓（外六角螺栓）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'nut', name: '螺母（六角螺母）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'screw', name: '螺钉（十字槽盘头螺钉）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'rivet', name: '铆钉（抽芯铆钉）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'washer', name: '垫圈（平垫圈/弹簧垫圈）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'key', name: '键（平键 / 半圆键）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'gear', name: '齿轮（直齿圆柱齿轮）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'helical-gear', name: '斜齿圆柱齿轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'bevel-gear', name: '锥齿轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'worm-gear', name: '蜗杆蜗轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'pulley', name: '带轮（V带轮/同步带轮）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'sprocket', name: '链轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'coupling', name: '联轴器（刚性/弹性联轴器）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'clutch', name: '离合器', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'ball-bearing', name: '滚动轴承（深沟球轴承）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'angular-bearing', name: '角接触球轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'cylindrical-bearing', name: '圆柱滚子轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'plain-bearing', name: '滑动轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'linear-guide', name: '导轨（直线导轨）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'guide-pin', name: '导柱导套', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'shaft', name: '轴（阶梯轴/光轴）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'compression-spring', name: '圆柱螺旋压缩弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'tension-spring', name: '圆柱螺旋拉伸弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'torsion-spring', name: '扭簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'disc-spring', name: '碟形弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'gas-spring', name: '气弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'seal', name: '密封圈（O型圈/油封）', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'grease', name: '润滑脂/油杯', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'retaining-ring', name: '挡圈（轴用/孔用弹性挡圈）', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'flange', name: '法兰盘', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'universal-joint', name: '万向节', category: '其他常用机械零件', page: 'other-parts.html' }
+        ];
+
+        // 搜索联想功能
+        let suggestionsTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDropdown = document.getElementById('suggestionsDropdown');
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(suggestionsTimeout);
+            
+            const query = this.value.toLowerCase().trim();
+            
+            if (query.length > 0) {
+                suggestionsTimeout = setTimeout(() => {
+                    const suggestions = partsData
+                        .filter(part => part.name.toLowerCase().includes(query) || 
+                                part.category.toLowerCase().includes(query))
+                        .slice(0, 5);
+                    
+                    displaySuggestions(suggestions, query);
+                }, 300);
+            } else {
+                hideSuggestions();
+            }
+        });
+
+        // 点击页面其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !suggestionsDropdown.contains(event.target)) {
+                hideSuggestions();
+            }
+        });
+
+        // 使用事件委托处理下拉菜单点击
+        suggestionsDropdown.addEventListener('click', function(event) {
+            event.stopPropagation(); // 阻止事件冒泡
+            const suggestionItem = event.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                const suggestion = suggestionItem.textContent.trim();
+                searchInput.value = suggestion;
+                hideSuggestions();
+                performSearch();
+            }
+        });
+
+        // 显示联想建议
+        function displaySuggestions(suggestions, query) {
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+            
+            suggestionsDropdown.innerHTML = suggestions.map(part => {
+                const highlightedName = highlightText(part.name, query);
+                return `
+                    <div class="suggestion-item">
+                        ${highlightedName}
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDropdown.classList.add('show');
+        }
+
+        // 隐藏联想建议
+        function hideSuggestions() {
+            suggestionsDropdown.classList.remove('show');
+        }
+
+        // 高亮匹配文本
+        function highlightText(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+        }
+
+        // 全屏切换功能
+        function toggleFullscreen() {
+            const container = document.getElementById('modelContainer');
+            
+            if (!document.fullscreenElement) {
+                // 进入全屏
+                if (container.requestFullscreen) {
+                    container.requestFullscreen();
+                } else if (container.webkitRequestFullscreen) {
+                    container.webkitRequestFullscreen();
+                } else if (container.msRequestFullscreen) {
+                    container.msRequestFullscreen();
+                }
+            } else {
+                // 退出全屏
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    document.webkitExitFullscreen();
+                } else if (document.msExitFullscreen) {
+                    document.msExitFullscreen();
+                }
+            }
+        }
+    </script>
+</body>
+</html>

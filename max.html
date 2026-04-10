@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零件小考验 - 大神模式</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1b5e20 0%, #388e3c 50%, #66bb6a 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 40px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .title-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .title-icon img {
+            width: 60px;
+            height: 60px;
+            filter: brightness(0) invert(1);
+        }
+
+        .question-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .question-number {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            font-weight: 600;
+        }
+
+        .question-progress {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .question-content {
+            font-size: 1.3rem;
+            color: white;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .option-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .option-item:hover:not(.selected):not(.disabled) {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateX(5px);
+        }
+
+        .option-item.selected {
+            background: rgba(76, 175, 80, 0.3);
+            border-color: rgba(76, 175, 80, 0.6);
+        }
+
+        .option-item.correct {
+            background: rgba(76, 175, 80, 0.4);
+            border-color: rgba(76, 175, 80, 0.8);
+        }
+
+        .option-item.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            border-color: rgba(244, 67, 54, 0.6);
+        }
+
+        .option-item.disabled {
+            cursor: not-allowed;
+        }
+
+        .option-letter {
+            width: 32px;
+            height: 32px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            color: white;
+            flex-shrink: 0;
+            font-size: 1rem;
+        }
+
+        .option-text {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1.05rem;
+            line-height: 1.5;
+            padding-top: 4px;
+        }
+
+        .answer-section {
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0;
+            animation: fadeInDown 0.5s ease-out forwards;
+        }
+
+        .answer-section.visible {
+            opacity: 1;
+        }
+
+        .answer-box {
+            background: rgba(76, 175, 80, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+        }
+
+        .answer-label {
+            font-size: 0.9rem;
+            color: rgba(76, 175, 80, 0.8);
+            margin-bottom: 5px;
+        }
+
+        .answer-text {
+            font-size: 1.1rem;
+            color: white;
+            font-weight: 600;
+        }
+
+        .analysis-box {
+            background: rgba(33, 150, 243, 0.2);
+            border-radius: 12px;
+            padding: 15px 20px;
+        }
+
+        .analysis-label {
+            font-size: 0.9rem;
+            color: rgba(33, 150, 243, 0.8);
+            margin-bottom: 5px;
+        }
+
+        .analysis-text {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.8s;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .nav-btn.submit-btn {
+            background: linear-gradient(135deg, #E91E63, #C2185B);
+        }
+
+        .nav-btn.submit-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #C2185B, #AD1457);
+        }
+
+        .result-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+        }
+
+        .result-icon {
+            width: 100px;
+            height: 100px;
+            margin: 0 auto 25px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .result-icon img {
+            width: 60%;
+            height: 60%;
+            filter: brightness(0) invert(1);
+        }
+
+        .result-title {
+            font-size: 2rem;
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .result-score {
+            font-size: 3rem;
+            font-weight: bold;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .result-text {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 30px;
+        }
+
+        .result-remark {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 30px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+
+        .questions-summary {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .questions-summary h3 {
+            font-size: 1.3rem;
+            color: white;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .question-summary-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .question-summary-item.correct {
+            border-left-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+        }
+
+        .question-summary-item.incorrect {
+            border-left-color: #F44336;
+            background: rgba(244, 67, 54, 0.1);
+        }
+
+        .question-summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .question-summary-number {
+            font-weight: 600;
+            color: white;
+        }
+
+        .question-summary-status {
+            font-size: 0.9rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+        }
+
+        .question-summary-status.correct {
+            background: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+
+        .question-summary-status.incorrect {
+            background: rgba(244, 67, 54, 0.3);
+            color: #F44336;
+        }
+
+        .question-summary-content {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .question-summary-answer {
+            margin-top: 10px;
+        }
+
+        .question-summary-answer-label {
+            font-size: 0.9rem;
+            color: #4CAF50;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .question-summary-answer-text {
+            font-size: 1rem;
+            color: white;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .question-summary-analysis {
+            margin-top: 10px;
+        }
+
+        .question-summary-analysis-label {
+            font-size: 0.9rem;
+            color: #2196F3;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .question-summary-analysis-text {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.8);
+            line-height: 1.5;
+        }
+
+        .restart-btn {
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: linear-gradient(135deg, #E91E63, #C2185B);
+            color: white;
+        }
+
+        .restart-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card {
+            width: 120px;
+            height: 120px;
+            opacity: 0.25;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-1 {
+            top: 5%;
+            left: 5%;
+            transform: rotate(-15deg);
+        }
+
+        .card-2 {
+            top: 15%;
+            right: 5%;
+            transform: rotate(20deg);
+        }
+
+        .card-3 {
+            bottom: 10%;
+            right: 8%;
+            transform: rotate(-10deg);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 1.8rem;
+                margin-bottom: 30px;
+            }
+
+            .title-icon {
+                width: 40px;
+                height: 40px;
+            }
+
+            .question-card {
+                padding: 20px;
+            }
+
+            .question-content {
+                font-size: 1.1rem;
+            }
+
+            .option-item {
+                padding: 12px 15px;
+            }
+
+            .option-letter {
+                width: 28px;
+                height: 28px;
+                font-size: 0.9rem;
+            }
+
+            .option-text {
+                font-size: 0.95rem;
+            }
+
+            .nav-btn {
+                padding: 12px 20px;
+                font-size: 1rem;
+            }
+
+            .result-card {
+                padding: 30px 20px;
+            }
+
+            .result-icon {
+                width: 80px;
+                height: 80px;
+                font-size: 2.5rem;
+            }
+
+            .result-title {
+                font-size: 1.5rem;
+            }
+
+            .result-score {
+                font-size: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="quiz-container">
+        <h1 class="title">
+            <span class="title-icon">
+                <img src="images/更多2_more-two.svg" alt="大神模式">
+            </span>
+            大神模式
+        </h1>
+
+        <div class="question-card">
+            <div class="question-header">
+                <span class="question-number">题目 <span id="current-question">1</span></span>
+                <span class="question-progress"><span id="answered-count">0</span>/5</span>
+            </div>
+            
+            <div class="question-content" id="question-text">加载中...</div>
+            
+            <div class="options-list" id="options-container">
+                <div class="option-item" onclick="selectOption(this)">
+                    <span class="option-letter">A</span>
+                    <span class="option-text">选项A</span>
+                </div>
+                <div class="option-item" onclick="selectOption(this)">
+                    <span class="option-letter">B</span>
+                    <span class="option-text">选项B</span>
+                </div>
+                <div class="option-item" onclick="selectOption(this)">
+                    <span class="option-letter">C</span>
+                    <span class="option-text">选项C</span>
+                </div>
+                <div class="option-item" onclick="selectOption(this)">
+                    <span class="option-letter">D</span>
+                    <span class="option-text">选项D</span>
+                </div>
+            </div>
+
+            <div class="answer-section" id="answer-section">
+                <div class="answer-box">
+                    <div class="answer-label">正确答案</div>
+                    <div class="answer-text" id="correct-answer"></div>
+                </div>
+                <div class="analysis-box">
+                    <div class="analysis-label">解析</div>
+                    <div class="analysis-text" id="analysis-text"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons">
+            <button class="nav-btn" id="prev-btn" onclick="prevQuestion()" disabled>上一题</button>
+            <button class="nav-btn" id="next-btn" onclick="nextQuestion()">下一题</button>
+            <button class="nav-btn submit-btn" id="submit-btn" onclick="submitQuiz()">提交答案</button>
+        </div>
+    </div>
+
+    <div class="container" id="result-container" style="display: none;">
+        <div class="result-card">
+            <div class="result-icon"><img src="images/手柄圆圈_handle-round.svg" id="result-emoji" alt="结果"></div>
+            <h2 class="result-title">测试完成!</h2>
+            <div class="result-score" id="final-score">0/5</div>
+            <p class="result-text" id="result-message"></p>
+            <p class="result-remark" id="result-remark"></p>
+            
+            <div class="questions-summary" id="questions-summary">
+                <h3>本次测试题目</h3>
+                <!-- 题目汇总将通过JavaScript动态生成 -->
+            </div>
+            
+            <button class="restart-btn" onclick="restartQuiz()">再试一次</button>
+        </div>
+    </div>
+
+    <a href="parts-test.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card card-1"></div>
+    <div class="decorative-element card card-2"></div>
+    <div class="decorative-element card card-3"></div>
+
+    <script>
+        const allQuestions = [
+            {"question":"在紧螺栓连接中，当工作载荷为轴向变载荷时，螺栓的疲劳断裂通常发生在什么部位？为什么？","options":["A. 螺栓头与杆部过渡圆角处，因为应力集中最大","B. 螺纹收尾处，因为加工痕迹","C. 螺母支承面第一圈螺纹处，因为载荷分布不均","D. 螺栓光杆中部，因为截面最小"],"answer":"C","analysis":"大量疲劳试验表明，螺栓连接中约85%的疲劳断裂发生在螺母支承面第一圈啮合螺纹的牙根处，因为该处承受最大的轴向载荷分布且存在应力集中。"},
+            {"question":"对于承受横向载荷的铰制孔螺栓连接，如果螺栓杆与孔壁的配合间隙过大，会导致什么后果？","options":["A. 螺栓容易松动","B. 连接件之间产生相对滑移，螺栓受剪切和挤压","C. 预紧力难以控制","D. 螺母容易脱落"],"answer":"B","analysis":"铰制孔螺栓依靠螺栓杆与孔壁的紧密配合来传递横向载荷。如果间隙过大，载荷会通过螺栓杆与孔壁的接触挤压来传递，但会产生冲击和附加弯矩，严重时导致螺栓剪断或孔壁压溃。"},
+            {"question":"平键连接中，如果键的强度满足要求，但轮毂的键槽侧壁出现压溃，可能的原因是什么？","options":["A. 键的材料强度太高","B. 轮毂材料强度不足或键槽表面粗糙度太差","C. 键的长度过短","D. 轴的直径太小"],"answer":"B","analysis":"键连接工作面是键与轮毂键槽的侧面。压溃发生在较软的材料上。如果轮毂材料（如铸铁）强度低于键材料，或者键槽加工精度低导致局部接触应力过大，就会先出现压溃。"},
+            {"question":"在齿轮传动中，齿根弯曲疲劳裂纹通常从齿根的哪一侧开始萌生？","options":["A. 受拉侧（齿根圆角过渡处）","B. 受压侧","C. 齿顶","D. 齿面节线处"],"answer":"A","analysis":"齿根弯曲应力在受拉侧最大，且齿根圆角处存在应力集中。疲劳裂纹首先从受拉侧的齿根圆角表面萌生，然后向齿厚方向扩展，最终导致断齿。"},
+            {"question":"斜齿轮传动中，螺旋角β过大会带来什么不利影响？","options":["A. 传动不平稳","B. 轴向力过大，轴承负荷增加","C. 重合度减小","D. 齿面磨损加剧"],"answer":"B","analysis":"螺旋角越大，斜齿轮的重合度越大，传动越平稳，但产生的轴向分力也越大，对轴承的要求更高，甚至需要采用推力轴承或成对角接触球轴承。"},
+            {"question":"蜗杆传动中，当要求具有自锁性时，通常采用什么方法？","options":["A. 减小蜗杆头数（如z1=1）并控制导程角小于摩擦角","B. 增大蜗杆头数","C. 采用大模数","D. 提高蜗杆表面硬度"],"answer":"A","analysis":"自锁条件是蜗杆的导程角小于当量摩擦角。单头蜗杆导程角小，容易满足自锁条件。多头蜗杆导程角大，不易自锁。"},
+            {"question":"带传动中，当小带轮包角过小时（如小于120°），主要会引起什么问题？","options":["A. 带速不稳定","B. 带容易打滑，传递能力下降","C. 带轮磨损加快","D. 带的寿命延长"],"answer":"B","analysis":"包角决定接触弧长。包角越小，带与带轮之间的摩擦力越小，极限有效拉力越低，容易发生打滑。通常要求小带轮包角≥120°。"},
+            {"question":"滚子链传动中，当链条磨损后节距增大，会导致什么现象？","options":["A. 链条伸长，容易脱链","B. 传动比增大","C. 链速变慢","D. 噪音减小"],"answer":"A","analysis":"链条磨损主要是销轴与套筒间隙变大，导致链条整体节距伸长。当伸长量超过一定值后，链条与链轮不能正确啮合，容易从链轮上脱出（脱链），尤其在大链轮上更严重。"},
+            {"question":"刚性联轴器（如凸缘联轴器）安装时，要求两轴严格对中。如果对中不良，会造成什么后果？","options":["A. 联轴器无法安装","B. 轴和轴承承受附加载荷，引起振动和发热","C. 传递扭矩下降","D. 噪音减小"],"answer":"B","analysis":"刚性联轴器不能补偿任何偏移。对中不良会使轴产生附加弯矩，轴承承受额外的径向力，导致振动、噪声、轴承发热甚至损坏。"},
+            {"question":"滚动轴承的“极限转速”是指什么？影响极限转速的最主要因素是什么？","options":["A. 轴承能承受的最大载荷对应的转速；润滑方式","B. 轴承在保持架强度和发热允许下的最高转速；保持架材料和润滑","C. 轴承的额定寿命对应的转速；轴承尺寸","D. 轴承材料允许的最高转速；滚动体类型"],"answer":"B","analysis":"极限转速是轴承在正常润滑和冷却条件下，不会因过热或保持架损坏而能连续运转的最高转速。主要受保持架强度、润滑方式和滚动体离心力影响。"},
+            {"question":"角接触球轴承在装配时，如果采用“面对面（DF）”安装，与“背对背（DB）”相比，其承受倾覆力矩的能力如何？","options":["A. 更强","B. 更弱","C. 相同","D. 取决于转速"],"answer":"B","analysis":"面对面安装时，两轴承的压力中心距离较近，抗倾覆力矩的力臂小，因此承受倾覆力矩的能力较弱，但轴向尺寸紧凑。"},
+            {"question":"滑动轴承在启动和停车阶段，最容易发生的失效形式是？","options":["A. 疲劳剥落","B. 胶合（咬粘）","C. 腐蚀","D. 气蚀"],"answer":"B","analysis":"启动和停车时，转速低，油膜尚未完全建立或已破裂，轴颈与轴承表面直接接触，摩擦产生高温，导致局部熔焊和粘着，即胶合。"},
+            {"question":"滚动直线导轨副的“预压”等级（如轻预压、中预压、重预压）应根据什么来选择？","options":["A. 导轨的长度","B. 设备的刚性和振动要求","C. 润滑油的类型","D. 环境温度"],"answer":"B","analysis":"预压越高，导轨刚性越好，但摩擦力也越大。对于高刚性、高精度、有冲击载荷的设备，选择中预压或重预压；对于轻载、低摩擦要求的设备，选择轻预压或无预压。"},
+            {"question":"冲压模具中，导柱和导套的配合间隙如果过大，会导致什么后果？","options":["A. 模具无法闭合","B. 凸模和凹模间隙不均匀，冲压件精度下降","C. 导柱卡死","D. 润滑不良"],"answer":"B","analysis":"导向间隙过大会导致上、下模在工作时发生相对偏移，使得凸模和凹模的间隙不均匀，严重时造成凸模折断或工件产生毛刺、尺寸超差。"},
+            {"question":"阶梯轴上的轴肩用于轴向定位零件。如果轴肩的高度太小，会有什么问题？","options":["A. 零件无法靠紧轴肩","B. 零件在轴向力作用下可能滑过轴肩","C. 加工困难","D. 应力集中增大"],"answer":"B","analysis":"轴肩高度应大于零件孔的倒角或圆角尺寸，并且要有足够的接触面。如果高度太小，当受到较大的轴向力时，零件可能会越过轴肩，失去定位作用。"},
+            {"question":"压缩弹簧在受载时，如果发生“并圈”（相邻簧圈接触），会导致什么后果？","options":["A. 弹簧刚度突然增大，可能损坏弹簧或关联零件","B. 弹簧寿命延长","C. 弹簧自由高度增加","D. 弹簧材料硬化"],"answer":"A","analysis":"并圈后弹簧的有效圈数减少，刚度急剧上升，继续压缩时应力迅速增大，可能导致弹簧断裂或使连接件过载。设计中应预留并圈间隙。"},
+            {"question":"拉伸弹簧的钩环处是应力集中最严重的部位。如果拉伸弹簧经常在钩环处断裂，应采取什么改进措施？","options":["A. 增大弹簧中径","B. 采用减应力钩环结构（如可转式钩环或螺纹插头）","C. 减小线径","D. 增加有效圈数"],"answer":"B","analysis":"传统弯钩处存在弯曲应力和扭转应力集中。采用专用螺纹接头或可旋转钩环可以避免弯曲应力，大幅提高疲劳寿命。"},
+            {"question":"蝶形弹簧的“特性曲线”是指载荷与变形的关系曲线。当蝶形弹簧的高厚比h0/t大于√2时，曲线会出现什么特征？","options":["A. 刚度恒定（线性）","B. 刚度递减，甚至出现负刚度（载荷下降段）","C. 刚度递增","D. 出现平台"],"answer":"B","analysis":"蝶形弹簧的刚度特性取决于高厚比。当h0/t > √2时，特性曲线先上升后下降，出现负刚度区（载荷随变形增大而减小），可用于恒力或跳跃机构。"},
+            {"question":"O型圈作为静密封时，其压缩率（压缩量与原始截面直径之比）一般推荐为多少？如果压缩率过大，会有什么问题？","options":["A. 10%~15%；过大则密封圈易永久变形或挤出","B. 30%~40%；过大则密封效果更好","C. 5%以下；过大则安装困难","D. 50%以上；无不良影响"],"answer":"A","analysis":"静密封推荐压缩率15%~30%（根据压力），通常取20%左右。压缩率过大会导致O型圈过度变形，产生过大内应力，加速永久变形和老化，甚至挤入间隙。"},
+            {"question":"油杯中的“压注式油杯”（黄油嘴）通常用于加注润滑脂。在什么情况下不宜使用压注式油杯？","options":["A. 高速旋转的轴承","B. 需要频繁加脂的场合","C. 低压润滑点","D. 手动操作不便的位置"],"answer":"A","analysis":"压注式油杯只能定期手动加脂，无法连续供油。高速轴承需要持续稳定的润滑剂供给，否则容易因润滑不足而发热损坏，应改用稀油循环润滑或集中润滑系统。"},
+            {"question":"孔用弹性挡圈和轴用弹性挡圈的安装方向有什么要求？","options":["A. 挡圈的倒角侧应朝向被固定的零件","B. 挡圈的平面侧应朝向被固定的零件","C. 无方向要求","D. 倒角侧必须朝外"],"answer":"A","analysis":"弹性挡圈的侧面有倒角和冲压圆角。安装时，应将倒角侧（圆滑过渡侧）朝向被固定的零件，这样挡圈能更好地贴合沟槽侧面，承受轴向力；平面侧朝外，便于卡簧钳操作。"},
+            {"question":"法兰盘的密封面形式有多种，如全平面、突面、凹凸面、榫槽面等。对于高温高压的场合，通常选用哪种密封面？","options":["A. 全平面","B. 突面","C. 凹凸面","D. 榫槽面"],"answer":"D","analysis":"榫槽面密封垫片被嵌入槽中，不易被吹出，密封性能好，适合高温高压及有毒有害介质。但加工复杂，更换垫片较麻烦。"},
+            {"question":"十字轴式万向联轴器在使用中，如果十字轴轴承发生烧蚀，最常见的原因是什么？","options":["A. 润滑不良","B. 转速过低","C. 夹角过小","D. 材料强度不足"],"answer":"A","analysis":"十字轴轴承承受高载荷和冲击，且摆动运动不利于油膜形成。润滑不良（缺油、油变质、密封损坏）是导致轴承过热烧蚀的主要原因。"},
+            {"question":"在滚动轴承的密封形式中，非接触式密封（如间隙密封、迷宫密封）与接触式密封（如油封）相比，主要优点是什么？","options":["A. 密封效果更好","B. 允许更高转速，摩擦损耗小","C. 结构简单","D. 防尘能力更强"],"answer":"B","analysis":"非接触式密封没有直接摩擦，因此允许更高的线速度，发热小，寿命长。但密封效果不如接触式，常用于高速、清洁环境。"},
+            {"question":"滑动轴承的轴瓦材料应具备哪些性能？为什么巴氏合金是常用的优质轴瓦材料？","options":["A. 高强度、高硬度；巴氏合金强度极高","B. 低摩擦系数、良好的顺应性和嵌藏性；巴氏合金软且跑合性好","C. 高导热性、耐腐蚀；巴氏合金导热最好","D. 低成本、易加工；巴氏合金价格便宜"],"answer":"B","analysis":"巴氏合金是一种软基体上分布硬质点的合金，具有低摩擦系数、良好的顺应性（能适应轴颈的不对中）和嵌藏性（能嵌入硬质颗粒减少刮伤），是经典轴瓦材料。"},
+            {"question":"滚珠丝杠副（滚动导轨）不能自锁，因此在垂直安装时，必须采取什么措施？","options":["A. 增加丝杠直径","B. 加装制动器或平衡锤","C. 改用梯形螺纹","D. 提高润滑等级"],"answer":"B","analysis":"滚珠丝杠效率高（>90%），反向驱动性好，垂直安装时，若没有制动装置，负载会使丝杠反向旋转而下滑，造成事故。必须加装电磁制动器、平衡气缸或配重。"},
+            {"question":"导柱与导套的材料通常为轴承钢（如GCr15）并淬硬至HRC58-62，这是为了什么？","options":["A. 美观","B. 获得高硬度和耐磨性，延长寿命","C. 便于加工","D. 防锈"],"answer":"B","analysis":"导柱导套频繁相对运动，磨损是主要失效形式。高硬度和高耐磨性可以显著提高使用寿命，同时保持导向精度。"},
+            {"question":"轴类零件设计中，为什么常采用“应力集中系数”的概念？减小应力集中的有效方法有哪些？","options":["A. 用来计算安全系数；增大圆角半径、开卸荷槽","B. 用来计算变形；增加轴径","C. 用来计算转速；表面镀铬","D. 用来计算重量；减少台阶数量"],"answer":"A","analysis":"应力集中系数反映几何不连续处局部应力与名义应力的比值。减小应力集中可采取：加大过渡圆角、设置卸荷槽、提高表面光洁度等。"},
+            {"question":"气弹簧支撑杆的“阻尼”功能是如何实现的？如果阻尼过大，会有什么感觉？","options":["A. 通过内部小孔和液压油；阻尼过大时运动缓慢甚至卡滞","B. 通过弹簧刚度；阻尼过大时回弹猛烈","C. 通过外部调节阀；阻尼过大时无法锁定","D. 通过气体压缩；阻尼过大时支撑力不足"],"answer":"A","analysis":"气弹簧内部有油液和节流小孔。活塞运动时，油液通过小孔产生阻力，实现阻尼。阻尼过大时，活塞运动缓慢，甚至无法正常伸出或压缩。"},
+            {"question":"离合器按接合过程可分为刚性冲击和柔性冲击。牙嵌式离合器接合时为什么会产生冲击？如何避免？","options":["A. 因为齿与齿之间相对速度大；可在低速或静止时接合","B. 因为弹簧力不足；增加弹簧刚度","C. 因为润滑不良；改善润滑","D. 因为材料太硬；改用软材料"],"answer":"A","analysis":"牙嵌离合器依靠端面齿啮合。如果在高速差下接合，齿与齿会碰撞产生冲击。通常应在转速差很小（接近静止）时接合，或采用同步机构。"},
+            {"question":"在螺栓连接的疲劳强度分析中，当工作载荷在0到F之间变化时，为了减小螺栓的应力幅，下列哪种措施最有效？","options":["A. 增大预紧力，同时减小螺栓刚度","B. 减小预紧力，同时增大螺栓刚度","C. 增大被连接件刚度","D. 改用更粗的螺栓"],"answer":"A","analysis":"应力幅与螺栓刚度成正比，与被连接件刚度成反比。减小螺栓刚度（如采用细长螺栓或空心螺栓）或增大被连接件刚度，可以降低应力幅，提高疲劳强度。增大预紧力不影响应力幅，但能保证残余预紧力。"},
+            {"question":"平键连接中，当采用双键布置时，两个平键通常应相隔多少度？为什么？","options":["A. 90°，为了平衡受力","B. 120°，为了加工方便","C. 180°，使轴受载均匀","D. 任意角度，无严格要求"],"answer":"C","analysis":"双平键应沿轴圆周相隔180°布置，这样可以使轴截面上的应力分布对称，避免产生附加弯矩，同时承载能力接近单键的两倍。"},
+            {"question":"在齿轮传动中，齿面点蚀通常首先发生在什么位置？","options":["A. 齿顶圆附近","B. 齿根圆附近","C. 节线附近的齿根表面","D. 齿面任意位置"],"answer":"C","analysis":"齿面点蚀是由于接触应力超过材料的疲劳极限。在节线附近，齿面相对滑动速度小，油膜难以形成，且接触应力较大，因此最容易出现点蚀。"},
+            {"question":"斜齿轮传动与直齿轮传动相比，除了传动平稳外，还有一个重要缺点是？","options":["A. 承载能力低","B. 制造难度大","C. 会产生轴向力，需要能承受轴向力的轴承","D. 噪音大"],"answer":"C","analysis":"斜齿轮啮合时产生轴向分力，需要选用角接触球轴承或圆锥滚子轴承来承受，增加了结构复杂性。直齿轮无轴向力。"},
+            {"question":"在蜗杆传动中，为什么通常将蜗杆作为主动件？如果反过来用蜗轮驱动蜗杆，会产生什么问题？","options":["A. 效率更低，容易自锁","B. 无法传动","C. 噪声极大","D. 磨损加剧但效率不变"],"answer":"A","analysis":"蜗杆传动反行程效率很低，若蜗轮主动，往往因自锁而无法带动蜗杆转动（除非导程角大于摩擦角）。即使能转动，效率也极低，发热严重。"},
+            {"question":"带传动中，打滑现象首先发生在哪个带轮上？","options":["A. 大带轮","B. 小带轮","C. 同时发生","D. 与包角无关"],"answer":"B","analysis":"小带轮的包角小，接触弧长短，所能传递的摩擦力较小，因此当载荷过大时，打滑首先出现在小带轮上。"},
+            {"question":"滚子链传动中，链条的“松边”和“紧边”如何区分？为什么通常将紧边布置在上方？","options":["A. 紧边在上，可避免松边下垂过大干扰啮合","B. 紧边在下，有利于润滑","C. 无区别，任意布置","D. 紧边必须水平"],"answer":"A","analysis":"链传动中，主动轮上链条拉紧的一侧为紧边。将紧边布置在上方，松边在下方，可以利用松边的垂度自动张紧，避免链条抖动或脱链。"},
+            {"question":"刚性联轴器和弹性联轴器在选型时，以下哪种工况必须选用弹性联轴器？","options":["A. 两轴对中性极好且无冲击","B. 两轴存在安装误差且可能产生冲击载荷","C. 传递极大扭矩","D. 要求轴向尺寸极小"],"answer":"B","analysis":"弹性联轴器能补偿两轴的相对位移（径向、角向、轴向），并且能缓冲吸振。当两轴对中性不好或存在冲击载荷时，必须选用弹性联轴器。"},
+            {"question":"角接触球轴承通常需要成对安装。在“背对背（DB）”和“面对面（DF）”两种配置中，哪一种更适合承受较大的倾覆力矩？","options":["A. 背对背（DB）","B. 面对面（DF）","C. 两者相同","D. 取决于转速"],"answer":"A","analysis":"背对背安装时，两轴承的压力中心距离较远，形成较大的抗倾覆力臂，因此承受倾覆力矩的能力更强，适用于悬臂结构或对刚度要求高的场合。"},
+            {"question":"滑动轴承在启动和停止时，最容易发生什么失效形式？","options":["A. 疲劳剥落","B. 胶合（咬焊）","C. 腐蚀","D. 点蚀"],"answer":"B","analysis":"启动和停止时，转速低，油膜尚未形成或已破裂，轴颈与轴承直接接触，导致局部高温，容易发生胶合（咬焊）。因此滑动轴承需要良好的启动性能材料。"},
+            {"question":"在滚动直线导轨副中，为什么要设置“预压”？预压过大会带来什么副作用？","options":["A. 提高刚性，但会增加摩擦力和发热","B. 提高寿命，但会降低精度","C. 降低噪音，但会减小承载能力","D. 方便安装，但会缩短行程"],"answer":"A","analysis":"预压能消除间隙，提高导轨刚性和定位精度。但预压过大会显著增加滚动体的接触应力，导致摩擦力增大，发热上升，降低寿命。"},
+            {"question":"冲压模具中，导柱和导套的配合如果过紧（间隙过小），会有什么后果？","options":["A. 导向精度更高，但容易卡死或磨损","B. 无不良影响","C. 提高模具寿命","D. 降低冲裁力"],"answer":"A","analysis":"间隙过小，导柱与导套之间难以形成润滑油膜，摩擦加剧，容易产生卡死或异常磨损，甚至导致模具无法正常工作。"},
+            {"question":"在阶梯轴的设计中，轴肩处通常需要设置“砂轮越程槽”或“螺纹退刀槽”，其作用是什么？","options":["A. 减轻重量","B. 便于加工和磨削，避免应力集中","C. 方便装配","D. 润滑通道"],"answer":"B","analysis":"砂轮越程槽用于磨削轴肩端面时保证砂轮不损伤相邻轴段；螺纹退刀槽便于螺纹加工时退出刀具。两者都能避免在直径突变处产生尖锐的应力集中。"},
+            {"question":"拉伸弹簧的“初始张力”是指什么？如果初始张力过大，会导致什么问题？","options":["A. 弹簧在不受外力时已处于拉紧状态，安装困难","B. 弹簧更容易断裂","C. 弹簧刚度变小","D. 无影响"],"answer":"A","analysis":"初始张力是拉伸弹簧制造时各圈之间紧密接触产生的预紧力。初始张力过大，需要较大的力才能使弹簧开始变形，导致安装困难，且容易造成弹簧早期疲劳。"},
+            {"question":"蝶形弹簧组合使用时，采用“对合组合”（交替正反叠放）的主要目的是什么？","options":["A. 增大变形量","B. 增大承载能力","C. 改变刚度特性为负刚度","D. 便于安装"],"answer":"A","analysis":"对合组合（串联）时，总变形量为各蝶簧变形量之和，而总载荷不变，因此可以显著增大弹簧的变形行程。"},
+            {"question":"O型圈用于往复运动密封时，若工作压力很高（如>10MPa），通常需要加装什么元件？为什么？","options":["A. 挡圈（backup ring），防止O型圈被挤入间隙","B. 弹簧，增加预紧力","C. 垫片，提高密封性","D. 润滑脂，减少摩擦"],"answer":"A","analysis":"高压下，O型圈会部分挤入密封间隙，容易被剪切破坏。加装挡圈（聚四氟乙烯或尼龙）可以堵住间隙，防止O型圈挤出。"},
+            {"question":"油杯中的“压注式油杯”（如直通式）适用于什么润滑场合？有什么局限性？","options":["A. 适用于手动定期加注润滑脂，但不能连续供油","B. 适用于高速连续润滑","C. 适用于油浴润滑","D. 适用于高温场合"],"answer":"A","analysis":"压注式油杯（俗称黄油嘴）用于使用黄油枪加注润滑脂，简单可靠，但只能定期手工加注，无法实现连续或自动润滑，且不适合稀油。"},
+            {"question":"孔用弹性挡圈和轴用弹性挡圈能否互换使用？为什么？","options":["A. 可以，尺寸相同","B. 不可以，因为受力方向和安装沟槽位置不同","C. 可以，但需要改变安装工具","D. 不可以，因为材料不同"],"answer":"B","analysis":"孔用挡圈受径向压缩，外径大于孔径；轴用挡圈受径向拉伸，内径小于轴径。两者形状、受力方向及沟槽设计均不同，不能互换。"},
+            {"question":"万向轴传动中，如果中间传动轴的两端万向节叉面不在同一平面内，会导致什么后果？","options":["A. 主、从动轴转速不等，产生剧烈振动","B. 传递扭矩下降","C. 润滑失效","D. 噪音减小"],"answer":"A","analysis":"双万向节等速传动的条件是：中间轴两端叉面共面，且两夹角相等。若不共面，即使夹角相等，也无法消除瞬时不等速，会导致从动轴转速波动，引起振动和冲击。"},
+            {"question":"离合器按操纵方式可分为机械、液压、气动和电磁等。对于需要频繁快速接合且远距离控制的场合，应优先选择哪种离合器？","options":["A. 机械杠杆式","B. 电磁离合器","C. 液压离合器","D. 气动离合器"],"answer":"B","analysis":"电磁离合器响应速度快，可实现远距离电控，适合频繁启停和自动化控制。液压和气动需要管路，响应稍慢；机械式需要近处操作。"}
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let userAnswers = {};
+        let submitted = false;
+
+        function shuffleArray(array) {
+            const arr = [...array];
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function initQuiz() {
+            const shuffled = shuffleArray(allQuestions);
+            currentQuestions = shuffled.slice(0, 5);
+            currentIndex = 0;
+            userAnswers = {};
+            submitted = false;
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const question = currentQuestions[currentIndex];
+            const options = shuffleArray([...question.options]);
+            
+            document.getElementById('current-question').textContent = currentIndex + 1;
+            document.getElementById('question-text').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('options-container');
+            const optionItems = optionsContainer.querySelectorAll('.option-item');
+            
+            options.forEach((option, index) => {
+                const letter = String.fromCharCode(65 + index);
+                optionItems[index].querySelector('.option-letter').textContent = letter;
+                optionItems[index].querySelector('.option-text').textContent = option.substring(3);
+                optionItems[index].dataset.letter = letter;
+                optionItems[index].dataset.answer = option.charAt(0);
+                optionItems[index].className = 'option-item';
+            });
+
+            document.getElementById('answer-section').className = 'answer-section';
+            
+            if (userAnswers[currentIndex] !== undefined) {
+                for (let i = 0; i < optionItems.length; i++) {
+                    if (optionItems[i].dataset.letter === userAnswers[currentIndex]) {
+                        optionItems[i].classList.add('selected');
+                        break;
+                    }
+                }
+            }
+
+            updateNavigation();
+        }
+
+        function selectOption(item) {
+            if (submitted) return;
+            
+            const options = document.querySelectorAll('.option-item');
+            options.forEach(opt => opt.classList.remove('selected'));
+            item.classList.add('selected');
+            
+            userAnswers[currentIndex] = item.dataset.letter;
+            updateAnsweredCount();
+        }
+
+        function updateAnsweredCount() {
+            const count = Object.keys(userAnswers).length;
+            document.getElementById('answered-count').textContent = count;
+        }
+
+        function updateNavigation() {
+            const prevBtn = document.getElementById('prev-btn');
+            const nextBtn = document.getElementById('next-btn');
+            const submitBtn = document.getElementById('submit-btn');
+            
+            prevBtn.disabled = currentIndex === 0;
+            nextBtn.disabled = submitted;
+            
+            if (currentIndex === currentQuestions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'block';
+            } else {
+                nextBtn.style.display = 'block';
+                submitBtn.style.display = 'none';
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion();
+            }
+        }
+
+        function nextQuestion() {
+            if (currentIndex < currentQuestions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            }
+        }
+
+        function submitQuiz() {
+            submitted = true;
+            showAnswer();
+            document.getElementById('next-btn').style.display = 'none';
+            document.getElementById('submit-btn').style.display = 'none';
+            
+            setTimeout(() => {
+                showResult();
+            }, 1500);
+        }
+
+        function showAnswer() {
+            const question = currentQuestions[currentIndex];
+            const options = document.querySelectorAll('.option-item');
+            
+            options.forEach(option => {
+                option.classList.add('disabled');
+                if (option.dataset.answer === question.answer) {
+                    option.classList.add('correct');
+                } else if (option.classList.contains('selected') && option.dataset.answer !== question.answer) {
+                    option.classList.add('incorrect');
+                }
+            });
+
+            // 找到正确答案对应的选项文字
+            let correctOptionText = question.answer;
+            question.options.forEach(option => {
+                if (option.charAt(0) === question.answer) {
+                    correctOptionText = option;
+                }
+            });
+
+            document.getElementById('correct-answer').textContent = correctOptionText;
+            document.getElementById('analysis-text').textContent = question.analysis;
+            document.getElementById('answer-section').className = 'answer-section visible';
+        }
+
+        function showResult() {
+            let correctCount = 0;
+            const questionsSummary = document.getElementById('questions-summary');
+            questionsSummary.innerHTML = '<h3>本次测试题目</h3>';
+            
+            currentQuestions.forEach((q, index) => {
+                const selectedLetter = userAnswers[index];
+                let selectedAnswer = '';
+                let isCorrect = false;
+                
+                if (selectedLetter !== undefined) {
+                    const options = document.querySelectorAll('.option-item');
+                    options.forEach(opt => {
+                        if (opt.dataset.letter === selectedLetter) {
+                            selectedAnswer = opt.dataset.answer;
+                        }
+                    });
+                    isCorrect = (selectedAnswer === q.answer);
+                    if (isCorrect) {
+                        correctCount++;
+                    }
+                }
+                
+                // 找到正确答案对应的选项文字
+                let correctOptionText = q.answer;
+                q.options.forEach(option => {
+                    if (option.charAt(0) === q.answer) {
+                        correctOptionText = option;
+                    }
+                });
+                
+                // 生成题目汇总HTML
+                const questionItem = document.createElement('div');
+                questionItem.className = `question-summary-item ${isCorrect ? 'correct' : 'incorrect'}`;
+                
+                questionItem.innerHTML = `
+                    <div class="question-summary-header">
+                        <span class="question-summary-number">题目 ${index + 1}</span>
+                        <span class="question-summary-status ${isCorrect ? 'correct' : 'incorrect'}">
+                            ${isCorrect ? '正确' : '错误'}
+                        </span>
+                    </div>
+                    <div class="question-summary-content">${q.question}</div>
+                    <div class="question-summary-answer">
+                        <div class="question-summary-answer-label">正确答案</div>
+                        <div class="question-summary-answer-text">${correctOptionText}</div>
+                    </div>
+                    <div class="question-summary-analysis">
+                        <div class="question-summary-analysis-label">解析</div>
+                        <div class="question-summary-analysis-text">${q.analysis}</div>
+                    </div>
+                `;
+                
+                questionsSummary.appendChild(questionItem);
+            });
+
+            document.getElementById('quiz-container').style.display = 'none';
+            document.getElementById('result-container').style.display = 'block';
+            
+            document.getElementById('final-score').textContent = `${correctCount}/5`;
+            
+            let icon, message, remark;
+            if (correctCount === 5) {
+                icon = 'images/手柄圆圈_handle-round.svg';
+                message = '恭喜！你是真正的零件大神！';
+                remark = '完美通关大神模式！你的机械零件知识已经达到专家水平！';
+            } else if (correctCount >= 4) {
+                icon = 'images/更多2_more-two.svg';
+                message = '太厉害了！接近完美！';
+                remark = '你已经是零件知识的高手！继续保持！';
+            } else if (correctCount >= 3) {
+                icon = 'images/书签_bookmark-one.svg';
+                message = '做得不错！大神模式挑战成功！';
+                remark = '困难等级掌握得还可以，继续努力！';
+            } else if (correctCount >= 2) {
+                icon = 'images/编辑文件_file-editing.svg';
+                message = '加油！多练习会更好！';
+                remark = '还需要加强困难等级知识学习，多做练习巩固！';
+            } else {
+                icon = 'images/书籍1_book-one.svg';
+                message = '需要多加练习！';
+                remark = '建议先复习基础和中等难度，再挑战大神模式。';
+            }
+            
+            document.getElementById('result-emoji').src = icon;
+            document.getElementById('result-message').textContent = message;
+            document.getElementById('result-remark').textContent = remark;
+        }
+
+        function restartQuiz() {
+            document.getElementById('result-container').style.display = 'none';
+            document.getElementById('quiz-container').style.display = 'block';
+            initQuiz();
+        }
+
+        window.addEventListener('DOMContentLoaded', initQuiz);
+    </script>
+</body>
+</html>

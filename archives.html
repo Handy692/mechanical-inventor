@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>零件档案馆</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 50px;
+            text-shadow: 
+                0 0 15px rgba(100, 181, 246, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .search-container {
+            display: flex;
+            max-width: 600px;
+            margin: 0 auto 40px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.5s;
+            position: relative;
+            z-index: 10;
+        }
+
+        .suggestions-dropdown {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(100, 181, 246, 0.3);
+            border-radius: 0 0 15px 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            z-index: 99999;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            pointer-events: auto;
+        }
+
+        .suggestions-dropdown.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #1a237e;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:hover {
+            background: rgba(100, 181, 246, 0.1);
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-highlight {
+            font-weight: 600;
+            color: #1a237e;
+        }
+
+        .search-input {
+            flex: 1;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px 0 0 25px;
+            color: white;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            border-color: rgba(100, 181, 246, 0.8);
+            box-shadow: 0 0 15px rgba(100, 181, 246, 0.3);
+        }
+
+        .search-button {
+            padding: 12px 20px;
+            background: rgba(100, 181, 246, 0.8);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(100, 181, 246, 0.8);
+            border-radius: 0 25px 25px 0;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .search-button:hover {
+            background: rgba(100, 181, 246, 1);
+            transform: translateY(-1px);
+            box-shadow: 0 5px 15px rgba(100, 181, 246, 0.4);
+        }
+
+        .content-card-link {
+            text-decoration: none;
+            display: block;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 30px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .content-card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 30px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            z-index: 10;
+            position: relative;
+            height: 320px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .content-card:nth-child(1) {
+            animation-delay: 0.8s;
+        }
+
+        .content-card:nth-child(2) {
+            animation-delay: 1s;
+        }
+
+        .content-card:nth-child(3) {
+            animation-delay: 1.2s;
+        }
+
+        .content-card:nth-child(4) {
+            animation-delay: 1.4s;
+        }
+
+        .content-card:nth-child(5) {
+            animation-delay: 1.6s;
+        }
+
+        .content-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .icon-container {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 20px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation-delay: 0.2s;
+        }
+
+        .icon-container img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+            animation-delay: 0.4s;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 0;
+            animation-delay: 0.6s;
+        }
+
+        .card-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.6;
+            animation-delay: 0.8s;
+            margin-top: 0;
+        }
+
+        .card-subtitle {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            margin-top: 0;
+            margin-bottom: 8px;
+            font-style: italic;
+            animation-delay: 1s;
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.8s;
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 20;
+            animation-delay: 2s;
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-1 {
+            top: 5%;
+            left: 2%;
+            animation: fadeInDownRotate1 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        .card-2 {
+            top: 10%;
+            right: 2%;
+            animation: fadeInDownRotate2 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .card-3 {
+            bottom: 5%;
+            right: 2%;
+            animation: fadeInDownRotate3 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes fadeInDownRotate1 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-15deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate2 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(20deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate3 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-10deg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+                margin-bottom: 30px;
+            }
+
+            .content-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 20px;
+            }
+
+            .content-card {
+                padding: 25px;
+            }
+
+            .content-card:nth-child(4) {
+                grid-column: 1;
+            }
+
+            .content-card:nth-child(5) {
+                grid-column: 2;
+            }
+
+            .icon-container {
+                width: 60px;
+                height: 60px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">
+            <img src="images/书籍1_book-one.svg" alt="档案馆" style="width: 60px; height: 60px; filter: brightness(0) invert(1);">
+            零件档案馆
+        </h1>
+        
+        <div class="search-container">
+            <input type="text" class="search-input" id="searchInput" placeholder="搜索零件..." onkeypress="handleKeyPress(event)">
+            <button class="search-button" onclick="performSearch()">
+                <img src="images/搜索_search.svg" alt="搜索">
+            </button>
+            <div class="suggestions-dropdown" id="suggestionsDropdown"></div>
+        </div>
+        
+        <div class="content-grid">
+            <a href="connection-parts.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/链接_link-three.svg" alt="链接">
+                    </div>
+                    <h2 class="card-title">连接类零件</h2>
+                    <p class="card-subtitle">Connection Parts</p>
+                    <p class="card-description">最基础、最常用，入门首选</p>
+                </div>
+            </a>
+
+            <a href="transmission-parts.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/设置_setting.svg" alt="设置">
+                    </div>
+                    <h2 class="card-title">传动类零件</h2>
+                    <p class="card-subtitle">Transmission Parts</p>
+                    <p class="card-description">机械核心，学习重点</p>
+                </div>
+            </a>
+
+            <a href="support-parts.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/手柄圆圈_handle-round.svg" alt="手柄圆圈">
+                    </div>
+                    <h2 class="card-title">支撑与导向类零件</h2>
+                    <p class="card-subtitle">Support and Guide Parts</p>
+                    <p class="card-description">保证机构稳定运行</p>
+                </div>
+            </a>
+
+            <a href="spring-parts.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/弹簧.svg" alt="弹簧">
+                    </div>
+                    <h2 class="card-title">弹簧与弹性元件</h2>
+                    <p class="card-subtitle">Springs and Elastic Elements</p>
+                    <p class="card-description">缓冲、储能、复位</p>
+                </div>
+            </a>
+
+            <a href="other-parts.html" class="content-card-link">
+                <div class="content-card">
+                    <div class="icon-container">
+                        <img src="images/更多2_more-two.svg" alt="更多">
+                    </div>
+                    <h2 class="card-title">其他常用机械零件</h2>
+                    <p class="card-subtitle">Other Common Mechanical Parts</p>
+                    <p class="card-description"></p>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <a href="main-content.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card card-1"></div>
+    <div class="decorative-element card card-2"></div>
+    <div class="decorative-element card card-3"></div>
+
+    <div class="footer">
+        <p>handy制作的小网页</p>
+    </div>
+
+    <script>
+        // 零件数据
+        const partsData = [
+            { id: 'bolt', name: '螺栓（外六角螺栓）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'nut', name: '螺母（六角螺母）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'screw', name: '螺钉（十字槽盘头螺钉）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'rivet', name: '铆钉（抽芯铆钉）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'washer', name: '垫圈（平垫圈/弹簧垫圈）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'key', name: '键（平键 / 半圆键）', category: '连接类零件', page: 'connection-parts.html' },
+            { id: 'gear', name: '齿轮（直齿圆柱齿轮）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'helical-gear', name: '斜齿圆柱齿轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'bevel-gear', name: '锥齿轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'worm-gear', name: '蜗杆蜗轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'pulley', name: '带轮（V带轮/同步带轮）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'sprocket', name: '链轮', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'coupling', name: '联轴器（刚性/弹性联轴器）', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'clutch', name: '离合器', category: '传动类零件', page: 'transmission-parts.html' },
+            { id: 'ball-bearing', name: '滚动轴承（深沟球轴承）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'angular-bearing', name: '角接触球轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'cylindrical-bearing', name: '圆柱滚子轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'plain-bearing', name: '滑动轴承', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'linear-guide', name: '导轨（直线导轨）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'guide-pin', name: '导柱导套', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'shaft', name: '轴（阶梯轴/光轴）', category: '支撑与导向类零件', page: 'support-parts.html' },
+            { id: 'compression-spring', name: '圆柱螺旋压缩弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'tension-spring', name: '圆柱螺旋拉伸弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'torsion-spring', name: '扭簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'disc-spring', name: '碟形弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'gas-spring', name: '气弹簧', category: '弹簧与弹性元件', page: 'spring-parts.html' },
+            { id: 'seal', name: '密封圈（O型圈/油封）', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'grease', name: '润滑脂/油杯', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'retaining-ring', name: '挡圈（轴用/孔用弹性挡圈）', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'flange', name: '法兰盘', category: '其他常用机械零件', page: 'other-parts.html' },
+            { id: 'universal-joint', name: '万向节', category: '其他常用机械零件', page: 'other-parts.html' }
+        ];
+
+        // 搜索功能
+        function performSearch() {
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                window.location.href = `search-results.html?q=${encodeURIComponent(query)}`;
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                performSearch();
+            }
+        }
+
+        // 搜索联想功能
+        let suggestionsTimeout;
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDropdown = document.getElementById('suggestionsDropdown');
+        
+        searchInput.addEventListener('input', function() {
+            clearTimeout(suggestionsTimeout);
+            
+            const query = this.value.toLowerCase().trim();
+            
+            if (query.length > 0) {
+                suggestionsTimeout = setTimeout(() => {
+                    const suggestions = partsData
+                        .filter(part => part.name.toLowerCase().includes(query) || 
+                                part.category.toLowerCase().includes(query))
+                        .slice(0, 5);
+                    
+                    displaySuggestions(suggestions, query);
+                }, 300);
+            } else {
+                hideSuggestions();
+            }
+        });
+
+        // 点击页面其他地方关闭下拉菜单
+        document.addEventListener('click', function(event) {
+            if (!searchInput.contains(event.target) && !suggestionsDropdown.contains(event.target)) {
+                hideSuggestions();
+            }
+        });
+
+        // 使用事件委托处理下拉菜单点击
+        suggestionsDropdown.addEventListener('click', function(event) {
+            event.stopPropagation(); // 阻止事件冒泡
+            const suggestionItem = event.target.closest('.suggestion-item');
+            if (suggestionItem) {
+                const suggestion = suggestionItem.textContent.trim();
+                searchInput.value = suggestion;
+                hideSuggestions();
+                performSearch();
+            }
+        });
+
+        // 显示联想建议
+        function displaySuggestions(suggestions, query) {
+            if (suggestions.length === 0) {
+                hideSuggestions();
+                return;
+            }
+            
+            suggestionsDropdown.innerHTML = suggestions.map(part => {
+                const highlightedName = highlightText(part.name, query);
+                return `
+                    <div class="suggestion-item">
+                        ${highlightedName}
+                    </div>
+                `;
+            }).join('');
+            
+            suggestionsDropdown.classList.add('show');
+        }
+
+        // 隐藏联想建议
+        function hideSuggestions() {
+            suggestionsDropdown.classList.remove('show');
+        }
+
+        // 高亮匹配文本
+        function highlightText(text, query) {
+            const regex = new RegExp(`(${query})`, 'gi');
+            return text.replace(regex, '<span class="suggestion-highlight">$1</span>');
+        }
+    </script>
+</body>
+</html>

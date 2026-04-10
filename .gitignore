@@ -1,0 +1,33 @@
+# 忽略临时文件
+*.tmp
+*.temp
+
+# 忽略编辑器文件
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 忽略系统文件
+Thumbs.db
+.DS_Store
+
+# 忽略模型文件（可选，根据需要调整）
+# model1/
+
+# 忽略文档文件
+*.docx
+*.txt
+
+# 忽略编译产物
+node_modules/
+dist/
+build/
+
+# 忽略环境变量文件
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local

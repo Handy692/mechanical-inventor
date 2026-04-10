@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超能模式 - 帮零件找名字</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90%, 110%, 130%, 150%, 170% { transform: translateX(-25px); }
+            20%, 40%, 60%, 80%, 100%, 120%, 140%, 160% { transform: translateX(25px); }
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            min-height: 100vh;
+            padding: 50px 20px;
+            opacity: 1;
+            transform: translateY(0);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: white;
+            text-align: center;
+            margin-bottom: 20px;
+            text-shadow: 
+                0 0 15px rgba(100, 181, 246, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4),
+                0 4px 8px rgba(0, 0, 0, 0.3);
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.4s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            text-align: center;
+            margin-bottom: 40px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.6s;
+        }
+
+        .game-container {
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeInDown 1s ease-out forwards;
+            animation-delay: 0.8s;
+            min-height: 600px;
+            position: relative;
+        }
+
+        .cards-container {
+            position: relative;
+            width: 100%;
+            height: 650px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            margin-bottom: 40px;
+            overflow: hidden;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            border-radius: 20px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+            cursor: grab;
+            min-height: 220px;
+            min-width: 200px;
+            max-width: 250px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            user-select: none;
+            z-index: 10;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            will-change: transform, left, top;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            z-index: 100;
+        }
+
+        .card:active {
+            cursor: grabbing;
+        }
+
+        .card.dragging {
+            opacity: 0.8;
+            transform: scale(1.05);
+            z-index: 1000;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4);
+            transition: none;
+        }
+
+        .card.shake {
+            animation: shake 0.8s ease-in-out;
+        }
+
+        .card.hidden {
+            opacity: 0;
+            transform: scale(0.8);
+            pointer-events: none;
+            transition: all 0.3s ease;
+        }
+
+        .card.description-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card.name-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .card.model-card {
+            background: rgba(100, 181, 246, 0.15);
+            border-color: rgba(100, 181, 246, 0.4);
+        }
+
+        .card-content {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .model-container {
+            width: 120px;
+            height: 120px;
+            margin-bottom: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        model-viewer {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            background: transparent;
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 5px;
+        }
+
+        .card-subtitle {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .back-button {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.8s;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a237e 0%, #3949ab 50%, #7986cb 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            opacity: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        .loading-overlay.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            position: relative;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-spinner::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            clip-path: polygon(
+                0% 0%, 10% 0%, 10% 10%, 0% 10%,
+                0% 90%, 10% 90%, 10% 100%, 0% 100%,
+                90% 0%, 100% 0%, 100% 10%, 90% 10%,
+                90% 90%, 100% 90%, 100% 100%, 90% 100%,
+                0% 45%, 10% 45%, 10% 55%, 0% 55%,
+                90% 45%, 100% 45%, 100% 55%, 90% 55%,
+                45% 0%, 55% 0%, 55% 10%, 45% 10%,
+                45% 90%, 55% 90%, 55% 100%, 45% 100%
+            );
+        }
+
+        .loading-spinner::after {
+            content: '';
+            position: absolute;
+            width: 60%;
+            height: 60%;
+            background: white;
+            border-radius: 50%;
+            top: 20%;
+            left: 20%;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .back-button img {
+            width: 50%;
+            height: 50%;
+            filter: brightness(0) invert(1);
+        }
+
+        .back-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.9rem;
+            z-index: 20;
+            animation-delay: 2s;
+        }
+
+        .decorative-element {
+            position: absolute;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .card-decor {
+            width: 150px;
+            height: 150px;
+            opacity: 0.3;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        .card-decor-1 {
+            top: 5%;
+            left: 2%;
+            animation: fadeInDownRotate1 1s ease-out forwards;
+            animation-delay: 0.3s;
+        }
+
+        .card-decor-2 {
+            top: 10%;
+            right: 2%;
+            animation: fadeInDownRotate2 1s ease-out forwards;
+            animation-delay: 0.5s;
+        }
+
+        .card-decor-3 {
+            bottom: 5%;
+            right: 2%;
+            animation: fadeInDownRotate3 1s ease-out forwards;
+            animation-delay: 0.7s;
+        }
+
+        @keyframes fadeInDownRotate1 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-15deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-15deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate2 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(20deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(20deg);
+            }
+        }
+
+        @keyframes fadeInDownRotate3 {
+            from {
+                opacity: 0;
+                transform: translateY(-20px) rotate(-10deg);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) rotate(-10deg);
+            }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: rgba(26, 35, 126, 0.95);
+            backdrop-filter: blur(15px);
+            border-radius: 25px;
+            padding: 50px;
+            text-align: center;
+            border: 1px solid rgba(100, 181, 246, 0.5);
+            max-width: 500px;
+            width: 90%;
+            opacity: 0;
+            transform: scale(0.9) translateY(20px);
+            animation: slideInRight 0.5s ease-out forwards;
+            animation-delay: 0.2s;
+        }
+
+        .modal-title {
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(100, 181, 246, 0.8);
+        }
+
+        .modal-text {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .modal-button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .modal-button.primary {
+            background: rgba(100, 181, 246, 0.8);
+            color: white;
+            border: 1px solid rgba(100, 181, 246, 0.8);
+        }
+
+        .modal-button.secondary {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .modal-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .title {
+                font-size: 2rem;
+                margin-bottom: 15px;
+            }
+
+            .subtitle {
+                font-size: 1rem;
+                margin-bottom: 30px;
+            }
+
+            .cards-container {
+                height: 400px;
+            }
+
+            .card {
+                min-width: 180px;
+                min-height: 200px;
+                padding: 15px;
+            }
+
+            .model-container {
+                width: 100px;
+                height: 100px;
+                margin-bottom: 10px;
+            }
+
+            .modal-content {
+                padding: 30px;
+            }
+
+            .modal-title {
+                font-size: 1.8rem;
+            }
+
+            .modal-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 加载界面 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+    </div>
+
+    <div class="container">
+        <h1 class="title">
+            <img src="images/设置_setting.svg" alt="超能模式" style="width: 60px; height: 60px; filter: brightness(0) invert(1);">
+            超能模式
+        </h1>
+        
+        <p class="subtitle">
+            根据文字描述，找到对应的零件名字或零件图，拖拽卡片进行配对
+        </p>
+        
+        <div class="game-container">
+            <div class="cards-container" id="cardsContainer">
+                <!-- 卡片将通过JavaScript动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <a href="match-names.html" class="back-button">
+        <img src="images/向下左角_corner-down-left.svg" alt="返回">
+    </a>
+
+    <div class="decorative-element card-decor card-decor-1"></div>
+    <div class="decorative-element card-decor card-decor-2"></div>
+    <div class="decorative-element card-decor card-decor-3"></div>
+
+    <div class="footer">
+        <p>handy制作的小网页</p>
+    </div>
+
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <h2 class="modal-title">🎉 恭喜你！</h2>
+            <p class="modal-text">挑战成功！你已经成功完成了所有零件的配对，真棒！</p>
+            <div class="modal-buttons">
+                <button class="modal-button secondary" onclick="restartGame()">再来一局</button>
+                <a href="match-names.html" class="modal-button primary">返回选择</a>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="https://unpkg.com/@google/model-viewer@latest/dist/model-viewer.js"></script>
+
+    <script>
+        // 零件数据 - 包含描述信息和3D模型文件路径
+        const partsData = [
+            { id: 'bolt', name: '六角螺栓', model: 'model2/1.1 Hexagon bolt.glb', description: '用于连接两个或多个部件的机械零件，通常与螺母配合使用' },
+            { id: 'nut', name: '六角螺母', model: 'model2/1.2 Hex nut.glb', description: '与螺栓配合使用，用于固定和锁紧的机械零件' },
+            { id: 'washer', name: '平垫圈', model: 'model2/1.3 Flat washer.glb', description: '用于填充间隙、密封或调整的薄片零件' },
+            { id: 'spring-washer', name: '弹簧垫圈', model: 'model2/1.3 Spring Washer.glb', description: '用于分散压力、保护接触面的零件' },
+            { id: 'screw', name: '十字槽螺钉', model: 'model2/1.4 Phillips Screw.glb', description: '带螺纹的紧固件，用于固定零件' },
+            { id: 'hex-screw', name: '内六角螺钉', model: 'model2/1.4Hex socket screw.glb', description: '带内六角的紧固件，用于固定零件' },
+            { id: 'pin', name: '圆柱销', model: 'model2/1.5 Cylindrical Pin.glb', description: '用于定位或连接的圆柱形零件' },
+            { id: 'taper-pin', name: '圆锥销', model: 'model2/1.5 Taper Pin.glb', description: '用于精确定位的圆锥形零件' },
+            { id: 'key', name: '平键', model: 'model2/1.6 Flat Key.glb', description: '用于连接轴和轮毂，传递扭矩的零件' },
+            { id: 'half-key', name: '半圆键', model: 'model2/1.6 Half-round Key.glb', description: '形状为半圆形的键，用于连接轴和轮毂' },
+            { id: 'rivet', name: '铆钉', model: 'model2/1.7 Rivet.glb', description: '用于永久连接的紧固件' },
+            { id: 'gear', name: '齿轮', model: 'model2/2.1 Gear.glb', description: '传递动力和运动的机械零件，通常用于改变转速和扭矩' },
+            { id: 'helical-gear', name: '斜齿轮', model: 'model2/2.2 Helical Gear.glb', description: '齿线与轴线成螺旋角的齿轮' },
+            { id: 'bevel-gear', name: '锥齿轮', model: 'model2/2.3 Bevel Gear.glb', description: '用于相交轴之间传动的齿轮' },
+            { id: 'worm', name: '蜗杆', model: 'model2/2.4 Worm.glb', description: '与蜗轮配合使用的螺纹状零件' },
+            { id: 'worm-wheel', name: '蜗轮', model: 'model2/2.4 Worm Wheel.glb', description: '与蜗杆配合使用的特殊齿轮' },
+            { id: 'pulley', name: 'V带轮', model: 'model2/2.5 V-belt Pulley.glb', description: '与V带配合使用的传动零件' },
+            { id: 'timing-pulley', name: '同步带轮', model: 'model2/2.5 Timing Pulley.glb', description: '与同步带配合使用的传动零件' },
+            { id: 'sprocket', name: '链轮', model: 'model2/2.6 Sprocket.glb', description: '与链条配合使用的传动零件' },
+            { id: 'bearing', name: '滚动轴承', model: 'model2/3.1 Rolling Bearing.glb', description: '减少摩擦，支持旋转运动的机械零件' },
+            { id: 'spring', name: '压缩弹簧', model: 'model2/4.1 Compression Spring.glb', description: '利用弹性力储存能量的机械零件' },
+            { id: 'o-ring', name: 'O型圈', model: 'model2/5.1 O-ring.glb', description: '用于密封的环形零件' }
+        ];
+
+        let currentParts = [];
+        let matchedPairs = 0;
+        let draggedCard = null;
+        let startX = 0;
+        let startY = 0;
+        let startLeft = 0;
+        let startTop = 0;
+        let containerRect = null;
+        let cardsContainer = null;
+        let originalPositions = new Map();
+        let isChecking = false;
+
+        // 初始化游戏
+        function initGame() {
+            cardsContainer = document.getElementById('cardsContainer');
+            cardsContainer.innerHTML = '';
+            originalPositions.clear();
+            
+            // 获取容器位置
+            containerRect = cardsContainer.getBoundingClientRect();
+            
+            // 随机选择5个零件
+            currentParts = getRandomParts(5);
+            
+            // 创建卡片数组
+            const cards = [];
+            
+            // 为每个零件创建描述卡片和配对卡片（名字或模型）
+            currentParts.forEach(part => {
+                // 创建描述卡片
+                cards.push({
+                    id: `description-${part.id}`,
+                    type: 'description',
+                    content: part
+                });
+                
+                // 随机选择配对类型（名字或模型）
+                const pairType = Math.random() > 0.5 ? 'name' : 'model';
+                cards.push({
+                    id: `${pairType}-${part.id}`,
+                    type: pairType,
+                    content: part
+                });
+            });
+            
+            // 创建卡片元素
+            cards.forEach((card, index) => {
+                const cardElement = createCard(card, index);
+                cardsContainer.appendChild(cardElement);
+            });
+            
+            matchedPairs = 0;
+        }
+
+        // 获取随机零件
+        function getRandomParts(count) {
+            const shuffled = [...partsData].sort(() => Math.random() - 0.5);
+            return shuffled.slice(0, count);
+        }
+
+        // 创建卡片元素
+        function createCard(card, index) {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.type}-card`;
+            cardElement.dataset.id = card.content.id;
+            cardElement.dataset.type = card.type;
+            cardElement.style.animationDelay = `${0.8 + index * 0.1}s`;
+            
+            // 随机位置（避免初始重叠）
+            let randomX = 0;
+            let randomY = 0;
+            let maxAttempts = 50;
+            let validPosition = false;
+            
+            while (!validPosition && maxAttempts > 0) {
+                const maxX = containerRect.width - 200;
+                const maxY = containerRect.height - 220;
+                
+                randomX = Math.random() * maxX;
+                randomY = Math.random() * maxY;
+                
+                // 检查是否与其他卡片重叠
+                validPosition = true;
+                
+                for (const [existingCard, position] of originalPositions.entries()) {
+                    const dx = Math.abs(randomX - position.left);
+                    const dy = Math.abs(randomY - position.top);
+                    
+                    // 确保卡片之间有足够的间距（至少卡片宽度的一半）
+                    if (dx < 150 && dy < 150) {
+                        validPosition = false;
+                        break;
+                    }
+                }
+                
+                maxAttempts--;
+            }
+            
+            cardElement.style.left = `${randomX}px`;
+            cardElement.style.top = `${randomY}px`;
+            
+            // 保存原始位置
+            originalPositions.set(cardElement, { left: randomX, top: randomY });
+            
+            if (card.type === 'description') {
+                cardElement.innerHTML = `
+                    <div class="card-content">
+                        <div class="card-title">${card.content.description}</div>
+                        <div class="card-subtitle">文字描述</div>
+                    </div>
+                `;
+            } else if (card.type === 'model') {
+                cardElement.innerHTML = `
+                    <div class="card-content">
+                        <div class="model-container">
+                            <model-viewer src="${card.content.model}" alt="${card.content.name}" auto-rotate camera-controls></model-viewer>
+                        </div>
+                        <div class="card-subtitle">3D模型</div>
+                    </div>
+                `;
+            } else {
+                cardElement.innerHTML = `
+                    <div class="card-content">
+                        <div class="card-title">${card.content.name}</div>
+                        <div class="card-subtitle">零件名称</div>
+                    </div>
+                `;
+            }
+            
+            // 添加拖拽事件
+            addDragEvents(cardElement);
+            
+            return cardElement;
+        }
+
+        // 添加拖拽事件
+        function addDragEvents(card) {
+            card.addEventListener('mousedown', handleMouseDown);
+            card.addEventListener('touchstart', handleTouchStart, { passive: false });
+        }
+
+        // 鼠标按下
+        function handleMouseDown(e) {
+            e.preventDefault();
+            startDrag(e.clientX, e.clientY, this);
+        }
+
+        // 触摸开始
+        function handleTouchStart(e) {
+            e.preventDefault();
+            const touch = e.touches[0];
+            startDrag(touch.clientX, touch.clientY, this);
+        }
+
+        // 开始拖拽
+        function startDrag(x, y, card) {
+            draggedCard = card;
+            
+            // 获取卡片当前位置
+            const rect = card.getBoundingClientRect();
+            startX = x;
+            startY = y;
+            startLeft = parseFloat(card.style.left) || 0;
+            startTop = parseFloat(card.style.top) || 0;
+            
+            // 更新容器位置
+            containerRect = cardsContainer.getBoundingClientRect();
+            
+            // 添加拖拽样式
+            card.classList.add('dragging');
+            
+            // 添加全局事件监听
+            document.addEventListener('mousemove', handleMouseMove);
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+            document.addEventListener('mouseup', handleMouseUp);
+            document.addEventListener('touchend', handleTouchEnd);
+        }
+
+        // 鼠标移动
+        function handleMouseMove(e) {
+            if (draggedCard) {
+                moveCard(e.clientX, e.clientY);
+            }
+        }
+
+        // 触摸移动
+        function handleTouchMove(e) {
+            e.preventDefault();
+            if (draggedCard) {
+                const touch = e.touches[0];
+                moveCard(touch.clientX, touch.clientY);
+            }
+        }
+
+        // 移动卡片
+        function moveCard(x, y) {
+            // 计算移动距离
+            const deltaX = x - startX;
+            const deltaY = y - startY;
+            
+            // 计算新位置
+            let newLeft = startLeft + deltaX;
+            let newTop = startTop + deltaY;
+            
+            // 限制在容器内
+            const cardWidth = draggedCard.offsetWidth;
+            const cardHeight = draggedCard.offsetHeight;
+            
+            newLeft = Math.max(0, Math.min(newLeft, containerRect.width - cardWidth));
+            newTop = Math.max(0, Math.min(newTop, containerRect.height - cardHeight));
+            
+            // 更新位置
+            draggedCard.style.left = `${newLeft}px`;
+            draggedCard.style.top = `${newTop}px`;
+        }
+
+        // 鼠标释放
+        function handleMouseUp() {
+            endDrag();
+        }
+
+        // 触摸结束
+        function handleTouchEnd() {
+            endDrag();
+        }
+
+        // 结束拖拽
+        function endDrag() {
+            if (draggedCard) {
+                draggedCard.classList.remove('dragging');
+                draggedCard = null;
+                
+                // 移除全局事件监听
+                document.removeEventListener('mousemove', handleMouseMove);
+                document.removeEventListener('touchmove', handleTouchMove);
+                document.removeEventListener('mouseup', handleMouseUp);
+                document.removeEventListener('touchend', handleTouchEnd);
+                
+                // 检查所有卡片的匹配情况
+                checkAllMatches();
+            }
+        }
+
+        // 检查所有卡片的匹配情况
+        function checkAllMatches() {
+            if (isChecking) return;
+            isChecking = true;
+            
+            const cards = document.querySelectorAll('.card');
+            const cardsArray = Array.from(cards);
+            let newMatches = 0;
+            const matchedIds = new Set();
+            const overlappingPairs = [];
+            
+            // 检查所有卡片对
+            for (let i = 0; i < cardsArray.length; i++) {
+                const card1 = cardsArray[i];
+                
+                // 跳过已隐藏或已匹配的卡片
+                if (card1.classList.contains('hidden') || matchedIds.has(card1.dataset.id)) continue;
+                
+                for (let j = i + 1; j < cardsArray.length; j++) {
+                    const card2 = cardsArray[j];
+                    
+                    // 跳过已隐藏或已匹配的卡片
+                    if (card2.classList.contains('hidden') || matchedIds.has(card2.dataset.id)) continue;
+                    
+                    // 检查是否重叠
+                    if (isOverlapping(card1, card2)) {
+                        overlappingPairs.push({ card1, card2 });
+                    }
+                }
+            }
+            
+            // 处理重叠的卡片对
+            handleOverlappingPairs(overlappingPairs);
+        }
+
+        // 处理重叠的卡片对
+        function handleOverlappingPairs(overlappingPairs) {
+            if (overlappingPairs.length === 0) {
+                isChecking = false;
+                return;
+            }
+            
+            let processed = 0;
+            
+            overlappingPairs.forEach((pair, index) => {
+                setTimeout(() => {
+                    const { card1, card2 } = pair;
+                    
+                    // 检查是否是匹配的卡片对
+                    if (card1.dataset.id === card2.dataset.id && card1.dataset.type !== card2.dataset.type) {
+                        // 配对成功，消除卡片
+                        card1.classList.add('hidden');
+                        card2.classList.add('hidden');
+                        matchedPairs++;
+                        
+                        // 检查是否全部配对完成
+                        setTimeout(() => {
+                            const remainingCards = document.querySelectorAll('.card:not(.hidden)');
+                            if (remainingCards.length === 0) {
+                                showSuccessModal();
+                            }
+                        }, 500);
+                    } else {
+                        // 配对错误，震动并恢复原位
+                        handleWrongMatch(card1, card2);
+                    }
+                    
+                    processed++;
+                    if (processed === overlappingPairs.length) {
+                        isChecking = false;
+                    }
+                }, index * 100);
+            });
+        }
+
+        // 处理错误配对
+        function handleWrongMatch(card1, card2) {
+            // 添加震动效果
+            card1.classList.add('shake');
+            card2.classList.add('shake');
+            
+            // 保存当前位置
+            const pos1 = {
+                left: parseFloat(card1.style.left) || 0,
+                top: parseFloat(card1.style.top) || 0
+            };
+            
+            const pos2 = {
+                left: parseFloat(card2.style.left) || 0,
+                top: parseFloat(card2.style.top) || 0
+            };
+            
+            // 震动后恢复原位
+            setTimeout(() => {
+                // 移除震动效果
+                card1.classList.remove('shake');
+                card2.classList.remove('shake');
+                
+                // 恢复到原始位置
+                const original1 = originalPositions.get(card1);
+                const original2 = originalPositions.get(card2);
+                
+                if (original1 && original2) {
+                    card1.style.left = `${original1.left}px`;
+                    card1.style.top = `${original1.top}px`;
+                    card2.style.left = `${original2.left}px`;
+                    card2.style.top = `${original2.top}px`;
+                }
+            }, 500);
+        }
+
+        // 检查两个卡片是否重叠
+        function isOverlapping(card1, card2) {
+            const rect1 = card1.getBoundingClientRect();
+            const rect2 = card2.getBoundingClientRect();
+            
+            // 检查边界是否重叠（需要足够的重叠区域）
+            const overlapX = Math.max(0, Math.min(rect1.right, rect2.right) - Math.max(rect1.left, rect2.left));
+            const overlapY = Math.max(0, Math.min(rect1.bottom, rect2.bottom) - Math.max(rect1.top, rect2.top));
+            const overlapArea = overlapX * overlapY;
+            const cardArea = rect1.width * rect1.height;
+            
+            // 只有当重叠面积超过卡片面积的40%时才认为是匹配（降低灵敏度）
+            return overlapArea > cardArea * 0.4;
+        }
+
+        // 显示成功弹窗
+        function showSuccessModal() {
+            const modal = document.getElementById('successModal');
+            modal.classList.add('show');
+        }
+
+        // 重新开始游戏
+        function restartGame() {
+            const modal = document.getElementById('successModal');
+            modal.classList.remove('show');
+            initGame();
+        }
+
+        // 页面加载时初始化游戏
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化游戏
+            initGame();
+            
+            // 隐藏加载界面
+            setTimeout(() => {
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                loadingOverlay.classList.add('hidden');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
