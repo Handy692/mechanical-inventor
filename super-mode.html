@@ -490,23 +490,32 @@
 
             .subtitle {
                 font-size: 1rem;
-                margin-bottom: 30px;
+                margin-bottom: 20px;
             }
 
             .cards-container {
-                height: 400px;
+                height: 500px;
             }
 
             .card {
-                min-width: 180px;
-                min-height: 200px;
-                padding: 15px;
+                min-width: 140px;
+                min-height: 160px;
+                max-width: 160px;
+                padding: 10px;
             }
 
             .model-container {
-                width: 100px;
-                height: 100px;
-                margin-bottom: 10px;
+                width: 80px;
+                height: 80px;
+                margin-bottom: 8px;
+            }
+
+            .card-title {
+                font-size: 0.9rem;
+            }
+
+            .card-subtitle {
+                font-size: 0.8rem;
             }
 
             .modal-content {
@@ -675,10 +684,10 @@
             if (isMobile) {
                 // 移动端：使用网格布局，避免重叠
                 const cols = 2;
-                const cardWidth = 160;
-                const cardHeight = 180;
-                const spacingX = 10;
-                const spacingY = 15;
+                const cardWidth = 140;
+                const cardHeight = 160;
+                const spacingX = 8;
+                const spacingY = 12;
                 
                 const row = Math.floor(index / cols);
                 const col = index % cols;
@@ -686,7 +695,7 @@
                 // 计算居中的起始位置
                 const totalWidth = cols * cardWidth + (cols - 1) * spacingX;
                 const startX = (containerRect.width - totalWidth) / 2;
-                const startY = 20;
+                const startY = 15;
                 
                 posX = startX + col * (cardWidth + spacingX);
                 posY = startY + row * (cardHeight + spacingY);
