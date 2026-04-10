@@ -647,6 +647,9 @@
                 });
             });
             
+            // 随机打乱卡片顺序
+            cards.sort(() => Math.random() - 0.5);
+            
             // 创建卡片元素
             cards.forEach((card, index) => {
                 const cardElement = createCard(card, index);
