@@ -1389,6 +1389,10 @@
             const partDetails = document.querySelector('.part-details');
             const modelContainer = document.getElementById('modelContainer');
             
+            console.log('updateModelForPart called with:', partId);
+            console.log('partDetails element:', partDetails);
+            console.log('Initial scrollTop:', partDetails.scrollTop);
+            
             // 淡出效果
             partDetails.style.opacity = '0';
             modelContainer.style.opacity = '0';
@@ -1410,14 +1414,19 @@
                     loadModel(currentModelId);
                 }
                 
-                // 滚动到顶部
-                partDetails.scrollTop = 0;
-                
-                // 淡入效果
+                // 确保布局更新后滚动到顶部
                 setTimeout(() => {
-                    partDetails.style.opacity = '1';
-                    modelContainer.style.opacity = '1';
-                }, 50);
+                    console.log('Scrolling to top...');
+                    partDetails.scrollTop = 0;
+                    console.log('After scrollTop = 0:', partDetails.scrollTop);
+                    
+                    // 淡入效果
+                    setTimeout(() => {
+                        partDetails.style.opacity = '1';
+                        modelContainer.style.opacity = '1';
+                        console.log('Fade in complete');
+                    }, 50);
+                }, 10);
             }, 300);
         }
         

@@ -1715,9 +1715,11 @@
                 });
                 document.getElementById(partId + '-details').style.display = 'block';
                 
-                // 滚动到顶部
-                const partDetailsElement = document.querySelector('.part-details');
-                partDetailsElement.scrollTop = 0;
+                // 确保布局更新后滚动到顶部
+                setTimeout(() => {
+                    const partDetailsElement = document.querySelector('.part-details');
+                    partDetailsElement.scrollTop = 0;
+                }, 10);
             }
         });
     </script>

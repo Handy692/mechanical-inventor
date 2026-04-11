@@ -1618,14 +1618,16 @@
                     loadModel(currentModelId);
                 }
                 
-                // 滚动到顶部
-                partDetails.scrollTop = 0;
-                
-                // 淡入效果
+                // 确保布局更新后滚动到顶部
                 setTimeout(() => {
-                    partDetails.style.opacity = '1';
-                    modelContainer.style.opacity = '1';
-                }, 50);
+                    partDetails.scrollTop = 0;
+                    
+                    // 淡入效果
+                    setTimeout(() => {
+                        partDetails.style.opacity = '1';
+                        modelContainer.style.opacity = '1';
+                    }, 50);
+                }, 10);
             }, 300);
         }
         
