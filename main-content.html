@@ -174,6 +174,56 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
+        .home-button {
+            position: fixed;
+            bottom: 30px;
+            right: 100px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.4s;
+        }
+
+        .home-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .main-content-button {
+            position: fixed;
+            bottom: 30px;
+            right: 170px;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            z-index: 9999;
+            animation-delay: 1.4s;
+        }
+
+        .main-content-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
         .footer {
             position: absolute;
             bottom: 20px;
@@ -278,6 +328,20 @@
             .back-button {
                 bottom: 20px;
                 right: 20px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .home-button {
+                bottom: 20px;
+                right: 80px;
+                width: 50px;
+                height: 50px;
+            }
+
+            .main-content-button {
+                bottom: 20px;
+                right: 140px;
                 width: 50px;
                 height: 50px;
             }
@@ -709,6 +773,21 @@
         </script>
     </div>
 
+    <a href="index.html" class="home-button">
+        <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M9 18V42H39V18L24 6L9 18Z" fill="none" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M19 29V42H29V29H19Z" fill="none" stroke="white" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M9 42H39" stroke="white" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+    </a>
+    <a href="main-content.html" class="main-content-button">
+        <svg width="24" height="24" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M48 0H0V48H48V0Z" fill="white" fill-opacity="0.01"/>
+            <path d="M34 5H8C6.34315 5 5 6.34315 5 8V34C5 35.6569 6.34315 37 8 37H34C35.6569 37 37 35.6569 37 34V8C37 6.34315 35.6569 5 34 5Z" fill="none" stroke="white" stroke-width="4" stroke-linejoin="round"/>
+            <path d="M43.9998 13.002V42.0001C43.9998 43.1046 43.1044 44.0001 41.9998 44.0001H13.0034" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M13 20.4858L18.9997 26.0109L29 15.7192" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </a>
     <a href="index.html" class="back-button">
         <img src="images/向下左角_corner-down-left.svg" alt="返回">
     </a>
