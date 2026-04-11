@@ -29,7 +29,8 @@
 ## 技术实现
 
 - **前端技术**：HTML5, CSS3, JavaScript
-- **3D模型**：使用Model Viewer库实现3D模型展示
+- **3D模型**：使用Three.js库实现3D模型展示和交互
+- **模型加载**：使用GLTFLoader和DRACOLoader优化3D模型加载性能
 - **响应式设计**：适配不同屏幕尺寸
 - **动画效果**：使用CSS动画和过渡效果增强用户体验
 
