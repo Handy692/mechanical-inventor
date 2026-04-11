@@ -775,6 +775,11 @@
                 const title = isCorrect ? '🎉 恭喜你答对了！' : '😢 这道题太难了';
                 const bottomText = isCorrect ? '我答对了这道魔鬼难度题，你敢来挑战吗？' : '这道题太难了，好友你能来帮我一下吗？';
                 
+                // 计算屏幕宽度，用于自适应字体大小
+                const screenWidth = window.innerWidth;
+                // 根据屏幕宽度计算字体大小
+                const baseFontSize = Math.min(screenWidth * 0.04, 16);
+                
                 // 创建弹窗HTML
                 const popupHTML = `
                     <div id="congrats-popup" style="
@@ -808,13 +813,15 @@
                                 margin: 0 auto;
                                 aspect-ratio: 3/4;
                                 justify-content: center;
+                                position: relative;
                             ">
                                 <h2 style="
                                     color: white;
-                                    font-size: 1.5rem;
+                                    font-size: ${baseFontSize * 1.5}px;
                                     margin-bottom: 15px;
                                     text-shadow: 0 0 15px rgba(100, 181, 246, 0.6);
                                     text-align: center;
+                                    word-wrap: break-word;
                                 ">${title}</h2>
                                 
                                 <div style="
@@ -834,18 +841,20 @@
                                 ">
                                     <h3 style="
                                         color: #1a237e;
-                                        font-size: 0.9rem;
+                                        font-size: ${baseFontSize * 0.9}px;
                                         margin-bottom: 8px;
                                         text-align: center;
                                         width: 100%;
+                                        word-wrap: break-word;
                                     ">${question.title}</h3>
                                     <p style="
                                         color: #333;
-                                        font-size: 0.75rem;
+                                        font-size: ${baseFontSize * 0.75}px;
                                         margin-bottom: 8px;
                                         text-align: left;
                                         width: 100%;
                                         line-height: 1.4;
+                                        word-wrap: break-word;
                                     ">${question.question}</p>
                                     <div style="
                                         text-align: left;
@@ -856,8 +865,9 @@
                                             <p style="
                                                 margin-bottom: 4px;
                                                 color: #333;
-                                                font-size: 0.65rem;
+                                                font-size: ${baseFontSize * 0.65}px;
                                                 line-height: 1.3;
+                                                word-wrap: break-word;
                                             ">${option}</p>
                                         `).join('')}
                                     </div>
@@ -870,12 +880,13 @@
                                     ">
                                         <p style="
                                             color: #333;
-                                            font-size: 0.8rem;
+                                            font-size: ${baseFontSize * 0.8}px;
                                             font-weight: bold;
                                             text-align: left;
                                             flex: 1;
                                             margin-right: 8px;
                                             line-height: 1.3;
+                                            word-wrap: break-word;
                                         ">${bottomText}</p>
                                         <div style="
                                             width: 70px;
@@ -952,6 +963,12 @@
                             background: rgba(255, 255, 255, 0.3);
                             transform: translateY(-2px);
                         }
+                        /* 确保弹窗内容在小屏幕上也能完整显示 */
+                        @media (max-width: 480px) {
+                            #popup-content {
+                                padding: 20px !important;
+                            }
+                        }
                     </style>
                 `;
                 
@@ -1005,56 +1022,63 @@
                     
                     if (isMobile) {
                         // 在移动设备上，创建一个可见的图片元素，提示用户长按保存
+                        const container = document.createElement('div');
+                        container.style.position = 'fixed';
+                        container.style.top = '0';
+                        container.style.left = '0';
+                        container.style.width = '100%';
+                        container.style.height = '100%';
+                        container.style.background = 'rgba(0, 0, 0, 0.9)';
+                        container.style.display = 'flex';
+                        container.style.flexDirection = 'column';
+                        container.style.justifyContent = 'center';
+                        container.style.alignItems = 'center';
+                        container.style.zIndex = '999999';
+                        
+                        // 创建图片
                         const img = document.createElement('img');
                         img.src = window.resultCanvas.toDataURL('image/png');
-                        img.style.position = 'fixed';
-                        img.style.top = '50%';
-                        img.style.left = '50%';
-                        img.style.transform = 'translate(-50%, -50%)';
                         img.style.maxWidth = '90%';
-                        img.style.maxHeight = '90%';
-                        img.style.zIndex = '999999';
+                        img.style.maxHeight = '70%';
                         img.style.border = '2px solid white';
                         img.style.borderRadius = '10px';
                         img.style.boxShadow = '0 0 20px rgba(0, 0, 0, 0.5)';
                         
+                        // 创建提示文字
+                        const hint = document.createElement('div');
+                        hint.innerText = '请长按图片保存到相册，然后分享给好友';
+                        hint.style.padding = '15px 25px';
+                        hint.style.background = 'rgba(255, 255, 255, 0.2)';
+                        hint.style.color = 'white';
+                        hint.style.borderRadius = '20px';
+                        hint.style.marginTop = '20px';
+                        hint.style.fontSize = '1rem';
+                        hint.style.textAlign = 'center';
+                        hint.style.maxWidth = '80%';
+                        
                         // 创建关闭按钮
                         const closeBtn = document.createElement('button');
                         closeBtn.innerText = '关闭';
-                        closeBtn.style.position = 'fixed';
-                        closeBtn.style.top = '10px';
-                        closeBtn.style.right = '10px';
                         closeBtn.style.padding = '10px 20px';
-                        closeBtn.style.background = 'rgba(0, 0, 0, 0.7)';
+                        closeBtn.style.background = 'rgba(255, 255, 255, 0.2)';
                         closeBtn.style.color = 'white';
-                        closeBtn.style.border = 'none';
-                        closeBtn.style.borderRadius = '5px';
-                        closeBtn.style.zIndex = '1000000';
+                        closeBtn.style.border = '1px solid rgba(255, 255, 255, 0.3)';
+                        closeBtn.style.borderRadius = '25px';
+                        closeBtn.style.marginTop = '15px';
                         closeBtn.style.cursor = 'pointer';
+                        closeBtn.style.fontSize = '0.9rem';
                         
-                        // 创建提示文字
-                        const hint = document.createElement('div');
-                        hint.innerText = '请长按图片保存到相册';
-                        hint.style.position = 'fixed';
-                        hint.style.bottom = '20px';
-                        hint.style.left = '50%';
-                        hint.style.transform = 'translateX(-50%)';
-                        hint.style.padding = '10px 20px';
-                        hint.style.background = 'rgba(0, 0, 0, 0.7)';
-                        hint.style.color = 'white';
-                        hint.style.borderRadius = '20px';
-                        hint.style.zIndex = '1000000';
+                        // 添加到容器
+                        container.appendChild(img);
+                        container.appendChild(hint);
+                        container.appendChild(closeBtn);
                         
                         // 添加到页面
-                        document.body.appendChild(img);
-                        document.body.appendChild(closeBtn);
-                        document.body.appendChild(hint);
+                        document.body.appendChild(container);
                         
                         // 关闭按钮点击事件
                         closeBtn.onclick = function() {
-                            document.body.removeChild(img);
-                            document.body.removeChild(closeBtn);
-                            document.body.removeChild(hint);
+                            document.body.removeChild(container);
                         };
                     } else {
                         // 在桌面设备上，使用原来的方法
