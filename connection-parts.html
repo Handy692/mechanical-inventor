@@ -1417,8 +1417,14 @@
                 // 确保布局更新后滚动到顶部
                 setTimeout(() => {
                     console.log('Scrolling to top...');
-                    partDetails.scrollTop = 0;
-                    console.log('After scrollTop = 0:', partDetails.scrollTop);
+                    console.log('Part details element:', partDetails);
+                    console.log('Current scrollTop:', partDetails.scrollTop);
+                    
+                    // 使用requestAnimationFrame确保在浏览器渲染后执行
+                    window.requestAnimationFrame(() => {
+                        partDetails.scrollTop = 0;
+                        console.log('After scrollTop = 0:', partDetails.scrollTop);
+                    });
                     
                     // 淡入效果
                     setTimeout(() => {
@@ -1426,7 +1432,7 @@
                         modelContainer.style.opacity = '1';
                         console.log('Fade in complete');
                     }, 50);
-                }, 10);
+                }, 50);
             }, 300);
         }
         

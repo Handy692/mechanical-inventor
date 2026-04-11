@@ -1530,8 +1530,11 @@
                 // 确保布局更新后滚动到顶部
                 setTimeout(() => {
                     const partDetailsElement = document.querySelector('.part-details');
-                    partDetailsElement.scrollTop = 0;
-                }, 10);
+                    // 使用requestAnimationFrame确保在浏览器渲染后执行
+                    window.requestAnimationFrame(() => {
+                        partDetailsElement.scrollTop = 0;
+                    });
+                }, 50);
             }
         });
     </script>
