@@ -1714,6 +1714,10 @@
                     detail.style.display = 'none';
                 });
                 document.getElementById(partId + '-details').style.display = 'block';
+                
+                // 滚动到顶部
+                const partDetailsElement = document.querySelector('.part-details');
+                partDetailsElement.scrollTop = 0;
             }
         });
     </script>

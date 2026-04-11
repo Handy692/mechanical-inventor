@@ -62,6 +62,12 @@
 ├── spring-parts.html       # 弹簧与弹性元件详情
 ├── other-parts.html        # 其他常用机械零件详情
 ├── search-results.html     # 搜索结果页
+├── foundation.html         # 基础页面
+├── difficult.html          # 难度选择页面
+├── max.html                # 最大模式页面
+├── simple-mode.html        # 简单模式页面
+├── super-mode.html         # 超级模式页面
+├── .gitignore              # Git忽略文件
 └── README.md               # 项目说明文档
 ```
 

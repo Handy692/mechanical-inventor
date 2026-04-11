@@ -1618,6 +1618,9 @@
                     loadModel(currentModelId);
                 }
                 
+                // 滚动到顶部
+                partDetails.scrollTop = 0;
+                
                 // 淡入效果
                 setTimeout(() => {
                     partDetails.style.opacity = '1';
